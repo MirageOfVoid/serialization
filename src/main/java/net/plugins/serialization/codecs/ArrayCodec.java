@@ -12,14 +12,9 @@ public class ArrayCodec<E> implements Codec<E[]> {
 
     @Override
     public DataResult<JsonElement> encode(E[] input) {
-//        try {
-//            JsonArray array = new JsonArray();
-//            for (E e : input)
-//                array.add(codec.encode(e).getOrThrow());
-//            return DataResult.success(array);
-//        } catch (RuntimeException e) {
-//            return DataResult.error(e);
-//        }
+        if (input.length == 0)
+            return DataResult.success(new JsonArray());
+
         JsonArray array = new JsonArray();
 
         for (E e : input) {
@@ -35,20 +30,17 @@ public class ArrayCodec<E> implements Codec<E[]> {
 
     @Override
     public DataResult<E[]> decode(JsonElement element) {
-//        try {
-//            JsonArray array = element.getAsJsonArray();
-//            @SuppressWarnings("unchecked")
-//            E[] res = (E[]) Array.newInstance(type, array.size());
-//            for (int i = 0; i < array.size(); i++)
-//                res[i] = codec.decode(array.get(i)).getOrThrow();
-//            return DataResult.success(res);
-//        } catch (RuntimeException e) {
-//            return DataResult.error(e);
-//        }
         if (!element.isJsonArray())
             return DataResult.error("Not a json array");
 
         JsonArray array = element.getAsJsonArray();
+
+        if (array.isEmpty()) {
+            @SuppressWarnings("unchecked")
+            E[] e = (E[]) Array.newInstance(type, 0);
+            return DataResult.success(e);
+        }
+
         @SuppressWarnings("unchecked")
         E[] res = (E[]) Array.newInstance(type, array.size());
 

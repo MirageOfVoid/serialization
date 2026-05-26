@@ -20,7 +20,7 @@ public class ListCodec<E> implements Codec<List<E>> {
         List<E> list = new ArrayList<>();
         for (JsonElement e : array) {
             try {
-                list.add(codec.decode(e).getOrThrow(RuntimeException::new));
+                list.add(codec.decode(e).getOrThrow());
             } catch (RuntimeException ex) {
                 return DataResult.error(ex::getMessage, list);
             }
@@ -35,7 +35,7 @@ public class ListCodec<E> implements Codec<List<E>> {
         JsonArray array = new JsonArray();
         for (E e : input) {
             try {
-                array.add(codec.encode(e).getOrThrow(RuntimeException::new));
+                array.add(codec.encode(e).getOrThrow());
             } catch (RuntimeException ex) {
                 return DataResult.error(ex::getMessage, array);
             }

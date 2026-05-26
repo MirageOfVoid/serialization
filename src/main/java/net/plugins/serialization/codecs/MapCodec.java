@@ -8,35 +8,40 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MapCodec<E> implements Codec<Map<String, E>> {
-    private <T> DataResult<T> processError(String process, Throwable throwable) {
-        return DataResult.error("Exception while " + process + " map: " + throwable.getMessage());
-    }
-
     private final Codec<E> codec;
 
     @Override
     public DataResult<JsonElement> encode(Map<String, E> input) {
-        try {
-            JsonObject object = new JsonObject();
-            input.forEach((key, value) -> {
-                object.add(key, codec.encode(value).getOrThrow());
-            });
-            return DataResult.success(object);
-        } catch (RuntimeException e) {
-            return processError("encoding", e);
+        if (input.isEmpty())
+            return DataResult.success(new JsonObject());
+
+        JsonObject object = new JsonObject();
+        for (String key : input.keySet()) {
+            try {
+                object.add(key, codec.encode(input.get(key)).getOrThrow());
+            } catch (RuntimeException e) {
+                return DataResult.error(e::getMessage, object);
+            }
         }
+        return DataResult.success(object);
     }
 
     @Override
     public DataResult<Map<String, E>> decode(JsonElement element) {
-        try {
-            Map<String, E> map = new HashMap<>();
-            JsonObject object = element.getAsJsonObject();
-            object.keySet().forEach(key -> map.put(key, codec.decode(object.get(key)).getOrThrow()));
-            return DataResult.success(map);
-        } catch (RuntimeException e) {
-            return processError("decoding", e);
+        if (!element.isJsonObject())
+            return DataResult.error("Not a json object");
+        JsonObject object = element.getAsJsonObject();
+        if (object.isEmpty())
+            return DataResult.success(new HashMap<>());
+        Map<String, E> map = new HashMap<>();
+        for (String key : object.keySet()) {
+            try {
+                map.put(key, codec.decode(object.get(key)).getOrThrow());
+            } catch (RuntimeException e) {
+                return DataResult.error(e::getMessage, map);
+            }
         }
+        return DataResult.success(map);
     }
 
     MapCodec(Codec<E> elementCodec) {

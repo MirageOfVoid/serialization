@@ -20,8 +20,8 @@ public interface PrimitiveCodec<R> extends Codec<R> {
     @Deprecated
     @Override
     default DataResult<R> decode(JsonElement element) {
-        if (element == null || element.isJsonNull())
-            return DataResult.error(() -> "Null json input");
+        if (!element.isJsonPrimitive())
+            return DataResult.error("Not a json primitive");
         return read(element.getAsJsonPrimitive());
     }
 }
