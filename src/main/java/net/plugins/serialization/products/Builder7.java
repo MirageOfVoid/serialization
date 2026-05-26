@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 public record Builder7<A, B, C, D, E, F, G, O>(CodecBuilder<O, A> a, CodecBuilder<O, B> b, CodecBuilder<O, C> c, CodecBuilder<O, D> d, CodecBuilder<O, E> e,
                                             CodecBuilder<O, F> f, CodecBuilder<O, G> g) {
-    public Codec<O> apply(F7<A, B, C, D, E, F, G, O> constructor) {
+    public Codec<O> apply(F7<A, B, C, D, E, F, G, O> constructor, String name) {
         return new Codec<O>() {
             @Override
             public DataResult<JsonElement> encode(O input) {
@@ -25,7 +25,7 @@ public record Builder7<A, B, C, D, E, F, G, O>(CodecBuilder<O, A> a, CodecBuilde
                     f.codec().appendTo(f.getter().apply(input), object).getOrThrow();
                     g.codec().appendTo(g.getter().apply(input), object).getOrThrow();
                 } catch (RuntimeException ex) {
-                    return DataResult.error(ex::getMessage, object);
+                    return DataResult.error(() -> "{%s} ".formatted(this) + ex.getMessage(), object);
                 }
 
                 return DataResult.success(object);
@@ -46,15 +46,19 @@ public record Builder7<A, B, C, D, E, F, G, O>(CodecBuilder<O, A> a, CodecBuilde
 
                     return DataResult.success(constructor.apply(ra, rb, rc, rd, re, rf, rg));
                 } catch (RuntimeException e) {
-                    return DataResult.error(e.getMessage());
+                    return DataResult.error(() -> "{%s} ".formatted(this) + e.getMessage());
                 }
             }
 
             @Override
             public @NotNull String toString() {
-                return "Codec(\n" + a.codec() + ";\n" + b.codec() + ";\n" + c.codec() + ";\n" + d.codec() + ";\n" + e.codec() +
-                        ";\n" + f.codec() + ";\n" + g.codec() + ")";
+                return name;
             }
         };
+    }
+
+    public Codec<O> apply(F7<A, B, C, D, E, F, G, O> constructor) {
+        return apply(constructor, "Codec(\n" + a.codec() + ";\n" + b.codec() + ";\n" + c.codec() + ";\n" + d.codec() + ";\n" + e.codec() +
+                ";\n" + f.codec() + ";\n" + g.codec() + ")");
     }
 }

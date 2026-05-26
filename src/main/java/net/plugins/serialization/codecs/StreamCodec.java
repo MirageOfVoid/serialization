@@ -17,7 +17,7 @@ public class StreamCodec<E> implements Codec<Stream<E>> {
                 array.add(codec.encode(e).getOrThrow());
             return DataResult.success(array);
         } catch (RuntimeException e) {
-            return DataResult.error(e);
+            return DataResult.error("(%s) ".formatted(this) + e.getMessage());
         }
     }
 
@@ -30,7 +30,7 @@ public class StreamCodec<E> implements Codec<Stream<E>> {
                 builder.add(codec.decode(e).getOrThrow());
             return DataResult.success(builder.build());
         } catch (RuntimeException e) {
-            return DataResult.error(e);
+            return DataResult.error("(%s) ".formatted(this) + e.getMessage());
         }
     }
 

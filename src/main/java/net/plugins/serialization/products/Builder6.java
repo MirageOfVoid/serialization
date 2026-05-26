@@ -9,7 +9,7 @@ import net.plugins.serialization.codecs.Codec;
 import org.jetbrains.annotations.NotNull;
 
 public record Builder6<A, B, C, D, E, F, O>(CodecBuilder<O, A> a, CodecBuilder<O, B> b, CodecBuilder<O, C> c, CodecBuilder<O, D> d, CodecBuilder<O, E> e, CodecBuilder<O, F> f) {
-    public Codec<O> apply(F6<A, B, C, D, E, F, O> constructor) {
+    public Codec<O> apply(F6<A, B, C, D, E, F, O> constructor, String name) {
         return new Codec<O>() {
             @Override
             public DataResult<JsonElement> encode(O input) {
@@ -23,7 +23,7 @@ public record Builder6<A, B, C, D, E, F, O>(CodecBuilder<O, A> a, CodecBuilder<O
                     e.codec().appendTo(e.getter().apply(input), object).getOrThrow();
                     f.codec().appendTo(f.getter().apply(input), object).getOrThrow();
                 } catch (RuntimeException ex) {
-                    return DataResult.error(ex::getMessage, object);
+                    return DataResult.error(() -> "{%s} ".formatted(this) + ex.getMessage(), object);
                 }
 
                 return DataResult.success(object);
@@ -43,14 +43,18 @@ public record Builder6<A, B, C, D, E, F, O>(CodecBuilder<O, A> a, CodecBuilder<O
 
                     return DataResult.success(constructor.apply(ra, rb, rc, rd, re, rf));
                 } catch (RuntimeException e) {
-                    return DataResult.error(e.getMessage());
+                    return DataResult.error(() -> "{%s} ".formatted(this) + e.getMessage());
                 }
             }
 
             @Override
             public @NotNull String toString() {
-                return "Codec(\n" + a.codec() + ";\n" + b.codec() + ";\n" + c.codec() + ";\n" + d.codec() + ";\n" + e.codec() + ";\n" + f.codec() + ")";
+                return name;
             }
         };
+    }
+
+    public Codec<O> apply(F6<A, B, C, D, E, F, O> constructor) {
+        return apply(constructor, "Codec(\n" + a.codec() + ";\n" + b.codec() + ";\n" + c.codec() + ";\n" + d.codec() + ";\n" + e.codec() + ";\n" + f.codec() + ")");
     }
 }

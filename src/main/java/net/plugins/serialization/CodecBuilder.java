@@ -44,4 +44,8 @@ public record CodecBuilder<O, C>(FieldCodec<C> codec, Function<O, C> getter, Str
     public static <A, B, C, D, E, F, G, O> Builder7<A, B, C, D, E, F, G, O> group(CodecBuilder<O, A> oa, CodecBuilder<O, B> ob, CodecBuilder<O, C> oc, CodecBuilder<O, D> od, CodecBuilder<O, E> oe, CodecBuilder<O, F> of, CodecBuilder<O, G> og) {
         return new Builder7<>(oa, ob, oc, od, oe, of, og);
     }
+
+    public static <A, B, C, D, E, F, G, H, O> Builder8<A, B, C, D, E, F, G, H, O> group(CodecBuilder<O, A> oa, CodecBuilder<O, B> ob, CodecBuilder<O, C> oc, CodecBuilder<O, D> od, CodecBuilder<O, E> oe, CodecBuilder<O, F> of, CodecBuilder<O, G> og, CodecBuilder<O, H> oh) {
+        return new Builder8<>(oa, ob, oc, od, oe, of, og, oh);
+    }
 }

@@ -21,7 +21,7 @@ public interface PrimitiveCodec<R> extends Codec<R> {
     @Override
     default DataResult<R> decode(JsonElement element) {
         if (!element.isJsonPrimitive())
-            return DataResult.error("Not a json primitive");
+            return DataResult.error("(%s) Not a json primitive".formatted(this));
         return read(element.getAsJsonPrimitive());
     }
 }

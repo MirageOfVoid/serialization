@@ -13,7 +13,7 @@ public class ListCodec<E> implements Codec<List<E>> {
     @Override
     public DataResult<List<E>> decode(JsonElement element) {
         if (!element.isJsonArray())
-            return DataResult.error("Not a json array");
+            return DataResult.error("(%s) Not a json array".formatted(this));
         JsonArray array = element.getAsJsonArray();
         if (array.isEmpty())
             return DataResult.success(new ArrayList<>());
@@ -22,7 +22,7 @@ public class ListCodec<E> implements Codec<List<E>> {
             try {
                 list.add(codec.decode(e).getOrThrow());
             } catch (RuntimeException ex) {
-                return DataResult.error(ex::getMessage, list);
+                return DataResult.error(() -> "(%s) ".formatted(this) + ex.getMessage(), list);
             }
         }
         return DataResult.success(list);
@@ -37,7 +37,7 @@ public class ListCodec<E> implements Codec<List<E>> {
             try {
                 array.add(codec.encode(e).getOrThrow());
             } catch (RuntimeException ex) {
-                return DataResult.error(ex::getMessage, array);
+                return DataResult.error(() -> "(%s) ".formatted(this) + ex.getMessage(), array);
             }
         }
         return DataResult.success(array);

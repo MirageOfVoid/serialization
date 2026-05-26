@@ -21,7 +21,7 @@ public class ArrayCodec<E> implements Codec<E[]> {
             try {
                 array.add(codec.encode(e).getOrThrow());
             } catch (RuntimeException ex) {
-                return DataResult.error(ex::getMessage, array);
+                return DataResult.error(() -> "(%s) ".formatted(this) + ex.getMessage(), array);
             }
         }
 
@@ -31,7 +31,7 @@ public class ArrayCodec<E> implements Codec<E[]> {
     @Override
     public DataResult<E[]> decode(JsonElement element) {
         if (!element.isJsonArray())
-            return DataResult.error("Not a json array");
+            return DataResult.error("(%s) Not a json array".formatted(this));
 
         JsonArray array = element.getAsJsonArray();
 
@@ -48,7 +48,7 @@ public class ArrayCodec<E> implements Codec<E[]> {
             try {
                 res[i] = codec.decode(array.get(i)).getOrThrow();
             } catch (RuntimeException e) {
-                return DataResult.error(e::getMessage, res);
+                return DataResult.error(() -> "(%s) ".formatted(this) + e.getMessage(), res);
             }
         }
 

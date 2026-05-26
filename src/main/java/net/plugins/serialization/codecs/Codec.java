@@ -74,23 +74,7 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
     }
 
     default Codec<Optional<R>> optionalOf() {
-        return of(new Encoder<Optional<R>>() {
-            @Override
-            public DataResult<JsonElement> encode(Optional<R> input) {
-                if (input.isEmpty())
-                    return DataResult.error("Empty optional input");
-                return Codec.this.encode(input.get());
-            }
-        }, new Decoder<Optional<R>>() {
-            @Override
-            public DataResult<Optional<R>> decode(JsonElement element) {
-                DataResult<R> result = Codec.this.decode(element);
-                Optional<R> optional = result.resultOrPartial();
-                if (optional.isEmpty())
-                    return DataResult.error("Empty json input");
-                return DataResult.success(optional);
-            }
-        }, this + "[optional]");
+        return new OptionalCodec<>(this);
     }
 
     default <T> Codec<T> xmap(Function<R, T> to, Function<T, R> from) {
@@ -125,12 +109,12 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         return this.toString().contains("[" + marker + "]");
     }
 
-    default FieldCodec<Optional<R>> optionalFieldOf(String field) {
-        return new FieldCodec<>(field, this.optionalOf());
-    }
-
     default FieldCodec<R> fieldOf(String field) {
         return new FieldCodec<>(field, this);
+    }
+
+    default FieldCodec<Optional<R>> optionalFieldOf(String field) {
+        return new FieldCodec<>(field, this.optionalOf());
     }
 
     PrimitiveCodec<Integer> INT = new PrimitiveCodec<Integer>() {
@@ -142,7 +126,7 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         @Override
         public DataResult<Integer> read(JsonPrimitive element) {
             if (element.isJsonNull())
-                return DataResult.error(() -> "Null value");
+                return DataResult.error("(%s) Null value".formatted(this));
 
             return DataResult.success(element.getAsInt());
         }
@@ -162,7 +146,7 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         @Override
         public DataResult<Float> read(JsonPrimitive element) {
             if (element.isJsonNull())
-                return DataResult.error(() -> "Null value");
+                return DataResult.error("(%s) Null value".formatted(this));
 
             return DataResult.success(element.getAsFloat());
         }
@@ -182,7 +166,7 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         @Override
         public DataResult<Double> read(JsonPrimitive element) {
             if (element.isJsonNull())
-                return DataResult.error(() -> "Null value");
+                return DataResult.error("(%s) Null value".formatted(this));
 
             return DataResult.success(element.getAsDouble());
         }
@@ -202,7 +186,7 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         @Override
         public DataResult<String> read(JsonPrimitive element) {
             if (element.isJsonNull())
-                return DataResult.error(() -> "Null value");
+                return DataResult.error("(%s) Null value".formatted(this));
 
             return DataResult.success(element.getAsString());
         }
@@ -222,7 +206,7 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         @Override
         public DataResult<Boolean> read(JsonPrimitive element) {
             if (element.isJsonNull())
-                return DataResult.error(() -> "Null value");
+                return DataResult.error("(%s) Null value".formatted(this));
 
             return DataResult.success(element.getAsBoolean());
         }

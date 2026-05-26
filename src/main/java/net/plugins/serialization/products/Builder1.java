@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Function;
 
 public record Builder1<A, O>(CodecBuilder<O, A> a) {
-    public Codec<O> apply(Function<A, O> constructor) {
+    public Codec<O> apply(Function<A, O> constructor, String name) {
         return new Codec<O>() {
             @Override
             public DataResult<JsonElement> encode(O input) {
@@ -19,7 +19,7 @@ public record Builder1<A, O>(CodecBuilder<O, A> a) {
                 try {
                     a.codec().appendTo(a.getter().apply(input), object).getOrThrow();
                 } catch (RuntimeException e) {
-                    return DataResult.error(e::getMessage, object);
+                    return DataResult.error(() -> "{%s} ".formatted(this) + e.getMessage(), object);
                 }
 
                 return DataResult.success(object);
@@ -34,14 +34,18 @@ public record Builder1<A, O>(CodecBuilder<O, A> a) {
 
                     return DataResult.success(constructor.apply(ra.getOrThrow()));
                 } catch (RuntimeException e) {
-                    return DataResult.error(e.getMessage());
+                    return DataResult.error("{%s} ".formatted(this) + e.getMessage());
                 }
             }
 
             @Override
             public @NotNull String toString() {
-                return "Codec(\n" + a.codec() + ")";
+                return name;
             }
         };
+    }
+
+    public Codec<O> apply(Function<A, O> constructor) {
+        return apply(constructor, "Codec(\n" + a.codec() + ")");
     }
 }

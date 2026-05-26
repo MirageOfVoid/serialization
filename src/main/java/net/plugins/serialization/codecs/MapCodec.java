@@ -20,7 +20,7 @@ public class MapCodec<E> implements Codec<Map<String, E>> {
             try {
                 object.add(key, codec.encode(input.get(key)).getOrThrow());
             } catch (RuntimeException e) {
-                return DataResult.error(e::getMessage, object);
+                return DataResult.error(() -> "(%s) ".formatted(this) + e.getMessage(), object);
             }
         }
         return DataResult.success(object);
@@ -29,7 +29,7 @@ public class MapCodec<E> implements Codec<Map<String, E>> {
     @Override
     public DataResult<Map<String, E>> decode(JsonElement element) {
         if (!element.isJsonObject())
-            return DataResult.error("Not a json object");
+            return DataResult.error("(%s) Not a json object".formatted(this));
         JsonObject object = element.getAsJsonObject();
         if (object.isEmpty())
             return DataResult.success(new HashMap<>());
@@ -38,7 +38,7 @@ public class MapCodec<E> implements Codec<Map<String, E>> {
             try {
                 map.put(key, codec.decode(object.get(key)).getOrThrow());
             } catch (RuntimeException e) {
-                return DataResult.error(e::getMessage, map);
+                return DataResult.error(() -> "(%s) ".formatted(this) + e.getMessage(), map);
             }
         }
         return DataResult.success(map);

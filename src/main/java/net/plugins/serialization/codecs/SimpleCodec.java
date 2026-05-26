@@ -15,7 +15,7 @@ public class SimpleCodec<R> implements Codec<R> {
             JsonElement element = GSON.toJsonTree(input, type);
             return DataResult.success(element);
         } catch (RuntimeException e) {
-            return DataResult.error(e.getMessage());
+            return DataResult.error("(%s) ".formatted(this) + e.getMessage());
         }
     }
 
@@ -25,7 +25,7 @@ public class SimpleCodec<R> implements Codec<R> {
             R r = GSON.fromJson(element, type);
             return DataResult.success(r);
         } catch (RuntimeException e) {
-            return DataResult.error(e.getMessage());
+            return DataResult.error("(%s) ".formatted(this) + e.getMessage());
         }
     }
 

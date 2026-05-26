@@ -19,10 +19,10 @@ public class EnumCodec<E extends Enum<E>> implements Codec<E> {
     @Override
     public DataResult<E> decode(JsonElement element) {
         if (!element.isJsonPrimitive())
-            return DataResult.error("Not a json primitive");
+            return DataResult.error("(%s) Not a json primitive".formatted(this));
         String name = element.getAsJsonPrimitive().getAsString();
         if (!map.containsKey(name))
-            return DataResult.error("Could not find enum element '" + name + "'");
+            return DataResult.error("(%s) Could not find enum element '".formatted(this) + name + "'");
         return DataResult.success(map.get(name));
     }
 

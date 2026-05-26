@@ -11,16 +11,10 @@ import java.util.function.Function;
 public class FieldCodec<T> implements Codec<T> {
     protected final String field;
     protected final Codec<T> codec;
-    protected boolean safe;
 
     FieldCodec(String field, Codec<T> codec) {
         this.field = field;
         this.codec = codec;
-        this.safe = codec.markedWith("safe");
-    }
-
-    public boolean isUnsafe() {
-        return !this.safe;
     }
 
     public String getFieldName() {
@@ -32,23 +26,36 @@ public class FieldCodec<T> implements Codec<T> {
     }
 
     @Override
+    public FieldCodec<T> orElse(T value) {
+        return new FieldCodec<>(field, codec) {
+            @Override
+            public DataResult<T> decode(JsonElement element) {
+                DataResult<T> result = super.decode(element);
+                if (result.isError())
+                    return DataResult.success(value);
+                return result;
+            }
+        };
+    }
+
+    @Override
     public DataResult<JsonElement> encode(T input) {
         try {
             JsonObject object = new JsonObject();
             object.add(field, codec.encode(input).getOrThrow());
             return DataResult.success(object);
         } catch (RuntimeException e) {
-            return DataResult.error(e.getMessage());
+            return DataResult.error("(%s) ".formatted(this) + e.getMessage());
         }
     }
 
     @Override
     public DataResult<T> decode(JsonElement element) {
         if (!element.isJsonObject())
-            return DataResult.error("Not a json object");
+            return DataResult.error("(%s) Not a json object".formatted(this));
         JsonObject object = element.getAsJsonObject();
         if (!object.asMap().containsKey(field)) {
-            return DataResult.error("Could not find field '" + field + "'");
+            return DataResult.error("(%s) Could not find field '".formatted(this) + field + "'");
         }
         T t = codec.decode(object.get(field)).getOrThrow();
         return DataResult.success(t);

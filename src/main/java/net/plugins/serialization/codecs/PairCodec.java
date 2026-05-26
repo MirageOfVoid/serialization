@@ -22,7 +22,7 @@ public class PairCodec<F, S> implements Codec<Pair<F, S>> {
             array.add(second.encode(input.getSecond()).getOrThrow());
             return DataResult.success(array);
         } catch (RuntimeException e) {
-            return DataResult.error(e);
+            return DataResult.error("(%s) ".formatted(this) + e.getMessage());
         }
     }
 
@@ -34,7 +34,7 @@ public class PairCodec<F, S> implements Codec<Pair<F, S>> {
             S s = second.decode(array.get(1)).getOrThrow();
             return DataResult.success(new Pair<>(f, s));
         } catch (RuntimeException e) {
-            return DataResult.error(e);
+            return DataResult.error("(%s) ".formatted(this) + e.getMessage());
         }
     }
 
