@@ -13,29 +13,22 @@ public record Builder2<A, B, O>(CodecBuilder<O, A> a, CodecBuilder<O, B> b) {
         return new Codec<O>() {
             @Override
             public DataResult<JsonElement> encode(O input) {
-                try {
-                    JsonObject object = new JsonObject();
+                JsonObject object = new JsonObject();
 
+                try {
                     a.codec().appendTo(a.getter().apply(input), object).getOrThrow();
                     b.codec().appendTo(b.getter().apply(input), object).getOrThrow();
-
-                    return DataResult.success(object);
                 } catch (RuntimeException e) {
-                    return DataResult.error(e.getMessage());
+                    return DataResult.error(e::getMessage, object);
                 }
+
+                return DataResult.success(object);
             }
 
             @Override
             public DataResult<O> decode(JsonElement element) {
                 try {
                     JsonObject object = element.getAsJsonObject();
-
-                    if (!object.asMap().containsKey(a.field()) && a.codec().isUnsafe()) {
-                        return DataResult.error("Could not find field '" + a.field() + "'");
-                    }
-                    if (!object.asMap().containsKey(b.field()) && b.codec().isUnsafe()) {
-                        return DataResult.error("Could not find field '" + b.field() + "'");
-                    }
 
                     DataResult<A> ra = a.codec().decode(object);
                     DataResult<B> rb = b.codec().decode(object);

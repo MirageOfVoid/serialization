@@ -174,7 +174,7 @@ public sealed interface DataResult<R> permits DataResult.Success, DataResult.Err
 
         @Override
         public Optional<R> resultOrPartial() {
-            return Optional.of(getOrThrow(RuntimeException::new));
+            return partialValue;
         }
 
         @Override

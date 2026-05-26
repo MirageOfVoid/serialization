@@ -27,10 +27,6 @@ public class FieldCodec<T> implements Codec<T> {
         return field;
     }
 
-    public Codec<T> select() {
-        return codec;
-    }
-
     public <O> CodecBuilder<O, T> forGetter(Function<O, T> getter) {
         return CodecBuilder.of(this, getter);
     }
@@ -48,22 +44,20 @@ public class FieldCodec<T> implements Codec<T> {
 
     @Override
     public DataResult<T> decode(JsonElement element) {
-        try {
-            JsonObject object = element.getAsJsonObject();
-            if (!object.asMap().containsKey(field)) {
-                return DataResult.error("Could not find field '" + field + "'");
-            }
-            T t = codec.decode(object.get(field)).getOrThrow();
-            return DataResult.success(t);
-        } catch (RuntimeException e) {
-            return DataResult.error(e.getMessage());
+        if (!element.isJsonObject())
+            return DataResult.error("Not a json object");
+        JsonObject object = element.getAsJsonObject();
+        if (!object.asMap().containsKey(field)) {
+            return DataResult.error("Could not find field '" + field + "'");
         }
+        T t = codec.decode(object.get(field)).getOrThrow();
+        return DataResult.success(t);
     }
 
     public DataResult<JsonObject> appendTo(T input, JsonObject object) {
         DataResult<JsonElement> result = codec.encode(input);
         if (result.isError())
-            return result.map(JsonElement::getAsJsonObject);
+            return DataResult.error(result.error().get().messageSupplier(), object);
         object.add(field, result.getOrThrow());
         return DataResult.success(object);
     }

@@ -13,41 +13,25 @@ public record Builder5<A, B, C, D, E, O>(CodecBuilder<O, A> a, CodecBuilder<O, B
         return new Codec<O>() {
             @Override
             public DataResult<JsonElement> encode(O input) {
-                try {
-                    JsonObject object = new JsonObject();
+                JsonObject object = new JsonObject();
 
+                try {
                     a.codec().appendTo(a.getter().apply(input), object).getOrThrow();
                     b.codec().appendTo(b.getter().apply(input), object).getOrThrow();
                     c.codec().appendTo(c.getter().apply(input), object).getOrThrow();
                     d.codec().appendTo(d.getter().apply(input), object).getOrThrow();
                     e.codec().appendTo(e.getter().apply(input), object).getOrThrow();
-
-                    return DataResult.success(object);
-                } catch (RuntimeException e) {
-                    return DataResult.error(e.getMessage());
+                } catch (RuntimeException ex) {
+                    return DataResult.error(ex::getMessage, object);
                 }
+
+                return DataResult.success(object);
             }
 
             @Override
             public DataResult<O> decode(JsonElement element) {
                 try {
                     JsonObject object = element.getAsJsonObject();
-
-                    if (!object.asMap().containsKey(a.field()) && a.codec().isUnsafe()) {
-                        return DataResult.error("Could not find field '" + a.field() + "'");
-                    }
-                    if (!object.asMap().containsKey(b.field()) && b.codec().isUnsafe()) {
-                        return DataResult.error("Could not find field '" + b.field() + "'");
-                    }
-                    if (!object.asMap().containsKey(c.field()) && c.codec().isUnsafe()) {
-                        return DataResult.error("Could not find field '" + c.field() + "'");
-                    }
-                    if (!object.asMap().containsKey(d.field()) && d.codec().isUnsafe()) {
-                        return DataResult.error("Could not find field '" + d.field() + "'");
-                    }
-                    if (!object.asMap().containsKey(e.field()) && e.codec().isUnsafe()) {
-                        return DataResult.error("Could not find field '" + e.field() + "'");
-                    }
 
                     A ra = a.codec().decode(object).getOrThrow();
                     B rb = b.codec().decode(object).getOrThrow();

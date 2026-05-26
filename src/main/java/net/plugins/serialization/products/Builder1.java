@@ -14,25 +14,21 @@ public record Builder1<A, O>(CodecBuilder<O, A> a) {
         return new Codec<O>() {
             @Override
             public DataResult<JsonElement> encode(O input) {
+                JsonObject object = new JsonObject();
+
                 try {
-                    JsonObject object = new JsonObject();
-
                     a.codec().appendTo(a.getter().apply(input), object).getOrThrow();
-
-                    return DataResult.success(object);
                 } catch (RuntimeException e) {
-                    return DataResult.error(e.getMessage());
+                    return DataResult.error(e::getMessage, object);
                 }
+
+                return DataResult.success(object);
             }
 
             @Override
             public DataResult<O> decode(JsonElement element) {
                 try {
                     JsonObject object = element.getAsJsonObject();
-
-                    if (!object.asMap().containsKey(a.field()) && a.codec().isUnsafe()) {
-                        return DataResult.error("Could not find field '" + a.field() + "'");
-                    }
 
                     DataResult<A> ra = a.codec().decode(object);
 

@@ -64,8 +64,16 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         return listOf(0, Integer.MAX_VALUE);
     }
 
+    default Codec<R[]> arrayOf(Class<R> type) {
+        return new ArrayCodec<>(this, type);
+    }
+
     default Codec<List<R>> listOf(int minSize, int maxSize) {
         return new ListCodec<>(this, minSize, maxSize);
+    }
+
+    default Codec<Stream<R>> streamOf() {
+        return new StreamCodec<>(this);
     }
 
     default Codec<Map<String, R>> mapOf() {
@@ -90,10 +98,6 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
                 return DataResult.success(optional);
             }
         }, this + "[optional]");
-    }
-
-    default Codec<Stream<R>> streamOf() {
-        return new StreamCodec<>(this);
     }
 
     default <T> Codec<T> xmap(Function<R, T> to, Function<T, R> from) {
