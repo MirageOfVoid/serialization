@@ -15,6 +15,7 @@ public class StreamCodec<E> implements Codec<Stream<E>> {
 
     @Override
     public DataResult<JsonElement> encode(Stream<E> input) {
+        // todo
         try {
             JsonArray array = new JsonArray();
             for (E e : input.toList())
@@ -27,6 +28,7 @@ public class StreamCodec<E> implements Codec<Stream<E>> {
 
     @Override
     public DataResult<Stream<E>> decode(JsonElement element) {
+        // todo
         try {
             JsonArray array = element.getAsJsonArray();
             Stream.Builder<E> builder = Stream.builder();

@@ -8,57 +8,43 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ListCodec<E> implements Codec<List<E>> {
-    private <T> DataResult<T> outOfBounds(int size) {
-        return DataResult.error(() -> "Size " + size + " is out of bounds: " + max + "-" + min);
-    }
-    private <T> DataResult<T> processError(String process, Throwable t) {
-        return DataResult.error("Exception while " + process + " list: " + t.getMessage());
-    }
-
     private final Codec<E> codec;
-    private final int max;
-    private final int min;
 
     @Override
     public DataResult<List<E>> decode(JsonElement element) {
-        try {
-            JsonArray array = element.getAsJsonArray();
-
-            int size = array.size();
-            if (size > max || size < min)
-                return outOfBounds(size);
-
-            List<E> list = new ArrayList<>();
-            for (JsonElement e : array) {
+        if (!element.isJsonArray())
+            return DataResult.error("Not a json array");
+        JsonArray array = element.getAsJsonArray();
+        if (array.isEmpty())
+            return DataResult.success(new ArrayList<>());
+        List<E> list = new ArrayList<>();
+        for (JsonElement e : array) {
+            try {
                 list.add(codec.decode(e).getOrThrow(RuntimeException::new));
+            } catch (RuntimeException ex) {
+                return DataResult.error(ex::getMessage, list);
             }
-            return DataResult.success(list);
-        } catch (RuntimeException e) {
-            return processError("decoding", e);
         }
+        return DataResult.success(list);
     }
 
     @Override
     public DataResult<JsonElement> encode(List<E> input) {
-        try {
-            int size = input.size();
-            if (size > max || size < min)
-                return outOfBounds(size);
-
-            JsonArray array = new JsonArray();
-            for (E e : input) {
+        if (input.isEmpty())
+            return DataResult.success(new JsonArray());
+        JsonArray array = new JsonArray();
+        for (E e : input) {
+            try {
                 array.add(codec.encode(e).getOrThrow(RuntimeException::new));
+            } catch (RuntimeException ex) {
+                return DataResult.error(ex::getMessage, array);
             }
-            return DataResult.success(array);
-        } catch (RuntimeException e) {
-            return processError("encoding", e);
         }
+        return DataResult.success(array);
     }
 
-    ListCodec(Codec<E> elementCodec, int minSize, int maxSize) {
+    ListCodec(Codec<E> elementCodec) {
         this.codec = elementCodec;
-        this.min = minSize;
-        this.max = maxSize;
     }
 
     @Override

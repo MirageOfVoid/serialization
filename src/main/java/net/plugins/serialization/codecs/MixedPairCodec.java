@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.plugins.serialization.DataResult;
 import net.plugins.util.Pair;
 
+@Deprecated(forRemoval = true)
 public class MixedPairCodec<F, S> extends PairCodec<F, S> {
     MixedPairCodec(FieldCodec<F> firstCodec, FieldCodec<S> secondCodec) {
         super(firstCodec, secondCodec);

@@ -14,6 +14,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+// todo: if error result add codec's name
 public interface Codec<R> extends Encoder<R>, Decoder<R> {
     @Override
     DataResult<JsonElement> encode(R input);
@@ -52,24 +53,16 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         return new PairCodec<>(firstCodec, secondCodec);
     }
 
-    static <F, S> Codec<Pair<F, S>> mixedPairCodec(FieldCodec<F> firstCodec, FieldCodec<S> secondCodec) {
-        return new MixedPairCodec<>(firstCodec, secondCodec);
-    }
-
     static <E extends Enum<E>> Codec<E> enumCodec(Supplier<? extends E[]> values) {
         return new EnumCodec<>(values.get());
     }
 
     default Codec<List<R>> listOf() {
-        return listOf(0, Integer.MAX_VALUE);
+        return new ListCodec<>(this);
     }
 
     default Codec<R[]> arrayOf(Class<R> type) {
         return new ArrayCodec<>(this, type);
-    }
-
-    default Codec<List<R>> listOf(int minSize, int maxSize) {
-        return new ListCodec<>(this, minSize, maxSize);
     }
 
     default Codec<Stream<R>> streamOf() {
