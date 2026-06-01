@@ -20,6 +20,11 @@ public class JsonOps implements DynamicOps<JsonElement> {
     }
 
     @Override
+    public JsonElement createBool(Boolean value) {
+        return new JsonPrimitive(value);
+    }
+
+    @Override
     public JsonElement createString(String value) {
         return new JsonPrimitive(value);
     }
@@ -46,6 +51,46 @@ public class JsonOps implements DynamicOps<JsonElement> {
         JsonObject object = new JsonObject();
         value.forEach(object::add);
         return DataResult.error(() -> "Not a json object", object);
+    }
+
+    @Override
+    public DataResult<Number> getNumber(JsonElement element) {
+        if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber()) {
+            return DataResult.success(element.getAsNumber());
+        }
+        return DataResult.error("Not a string input");
+    }
+
+    @Override
+    public DataResult<Boolean> getBool(JsonElement element) {
+        if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isBoolean()) {
+            return DataResult.success(element.getAsBoolean());
+        }
+        return DataResult.error("Not a boolean input");
+    }
+
+    @Override
+    public DataResult<String> getString(JsonElement element) {
+        if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isString()) {
+            return DataResult.success(element.getAsString());
+        }
+        return DataResult.error("Not a string input");
+    }
+
+    @Override
+    public DataResult<List<JsonElement>> getList(JsonElement element) {
+        if (element.isJsonArray()) {
+            return DataResult.success(element.getAsJsonArray().asList());
+        }
+        return DataResult.error("Not a json array");
+    }
+
+    @Override
+    public DataResult<Map<String, JsonElement>> getMap(JsonElement element) {
+        if (element.isJsonObject()) {
+            return DataResult.success(element.getAsJsonObject().asMap());
+        }
+        return DataResult.error("Not a json object");
     }
 
     @Override
