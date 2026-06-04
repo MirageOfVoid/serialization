@@ -1,11 +1,9 @@
-package net.plugins.serialization.ops;
+package net.plugins.serialization;
 
-import net.plugins.serialization.DataResult;
+import net.plugins.util.MapLike;
+import net.plugins.util.RecordBuilder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 public interface DynamicOps<T> {
@@ -23,6 +21,10 @@ public interface DynamicOps<T> {
         return createNumber(value);
     }
 
+    default T createShort(Short value) {
+        return createNumber(value);
+    }
+
     default T createFloat(Float value) {
         return createNumber(value);
     }
@@ -37,11 +39,11 @@ public interface DynamicOps<T> {
 
     T createList(List<T> value);
 
-    T createMap(Map<String, T> value);
+    T createMap(MapLike<T> value);
 
     DataResult<T> mergeToList(T list, List<T> value);
 
-    DataResult<T> mergeToMap(T map, Map<String, T> value);
+    DataResult<T> mergeToMap(T map, MapLike<T> value);
 
     DataResult<Number> getNumber(T t);
 
@@ -55,6 +57,10 @@ public interface DynamicOps<T> {
 
     default DataResult<Byte> getByte(T t) {
         return getNumber(t).map(Number::byteValue);
+    }
+
+    default DataResult<Short> getShort(T t) {
+        return getNumber(t).map(Number::shortValue);
     }
 
     default DataResult<Float> getFloat(T t) {
@@ -71,48 +77,59 @@ public interface DynamicOps<T> {
 
     DataResult<List<T>> getList(T t);
 
-    DataResult<Map<String, T>> getMap(T t);
+    DataResult<MapLike<T>> getMap(T t);
+
+    DataResult<T> getFromMap(T map, String key);
+
+    DataResult<T> getFromList(T list, int index);
+
+    default DataResult<T> mergeToPrimitive(T prefix, T value) {
+        if (!Objects.equals(prefix, value)) {
+            return DataResult.error("Can not merge value " + value + " to " + prefix);
+        }
+        return DataResult.success(value);
+    }
+
+    T empty();
+
+    T emptyMap();
+
+    T emptyList();
+
+    T clone(T t);
 
     default ListBuilder<T> listBuilder() {
         return new ListBuilder<>(this::createList);
     }
 
-    default MapBuilder<T> mapBuilder() {
-        return new MapBuilder<>(this::createMap);
-    }
+    RecordBuilder<T> mapBuilder();
 
     class ListBuilder<E> {
         protected final List<E> list = new ArrayList<>();
 
         private final Function<List<E>, E> function;
 
+        public boolean add(DataResult<E> e) {
+            if (e.isSuccess()) {
+                list.add(e.getOrThrow());
+                return true;
+            }
+            return false;
+        }
+
         public void add(E e) {
             list.add(e);
+        }
+
+        public boolean isEmpty() {
+            return list.isEmpty();
         }
 
         public E build() {
             return function.apply(list);
         }
 
-        ListBuilder(Function<List<E>, E> function) {
-            this.function = function;
-        }
-    }
-
-    class MapBuilder<E> {
-        protected final Map<String, E> map = new HashMap<>();
-
-        private final Function<Map<String, E>, E> function;
-
-        public void add(String key, E e) {
-            map.put(key, e);
-        }
-
-        public E build() {
-            return function.apply(map);
-        }
-
-        public MapBuilder(Function<Map<String, E>, E> function) {
+        public ListBuilder(Function<List<E>, E> function) {
             this.function = function;
         }
     }

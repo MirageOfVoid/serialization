@@ -2,31 +2,24 @@ package net.plugins.serialization.codecs;
 
 import net.plugins.serialization.DataResult;
 import net.plugins.serialization.Decoder;
+import net.plugins.serialization.DynamicOps;
 import net.plugins.serialization.Encoder;
-import net.plugins.serialization.ops.DynamicOps;
+import net.plugins.util.Pair;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public interface Codec<R> extends Encoder<R>, Decoder<R> {
-    @Override
-    <T> DataResult<T> encode(DynamicOps<T> ops, R input);
-
-    @Override
-    <T> DataResult<R> decode(DynamicOps<T> ops, T t);
-
     static <R> Codec<R> of(Encoder<R> encoder, Decoder<R> decoder, String name) {
         return new Codec<R>() {
             @Override
-            public <T> DataResult<T> encode(DynamicOps<T> ops, R input) {
-                return encoder.encode(ops, input);
+            public <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T t) {
+                return decoder.decode(ops, t);
             }
 
             @Override
-            public <T> DataResult<R> decode(DynamicOps<T> ops, T t) {
-                return decoder.decode(ops, t);
+            public <T> DataResult<T> encode(DynamicOps<T> ops, R input, T prefix) {
+                return encoder.encode(ops, input, prefix);
             }
 
             @Override
@@ -40,119 +33,43 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         return of(encoder, decoder, "Codec");
     }
 
-    static <E extends Enum<E>> Codec<E> enumCodec(Supplier<E[]> values) {
-        return new EnumCodec<>(values);
-    }
-
     default Codec<List<R>> listOf() {
         return new ListCodec<>(this);
     }
 
-    default Codec<Map<String, R>> mapOf() {
-        return new MapCodec<>(this);
+    default <S> Codec<S> xmap(Function<R, S> to, Function<S, R> from) {
+        return Codec.of(comap(from), map(to), this + "[xmapped]");
     }
 
-    default <T> Codec<T> xmap(Function<R, T> to, Function<T, R> from) {
-        return of(comap(from), map(to), this + "[xmapped]");
+    default <S> Codec<S> comapFlatMap(Function<R, DataResult<S>> to, Function<S, R> from) {
+        return Codec.of(comap(from), flatMap(to), this + "[comapFlatMapped]");
     }
 
-    default <T> Codec<T> comapFlatMap(Function<R, DataResult<T>> to, Function<T, R> from) {
-        return of(comap(from), flatMap(to), this + "[comapFlatMapped]");
+    default <S> Codec<S> flatComapMap(Function<R, S> to, Function<S,DataResult<R>> from) {
+        return Codec.of(flatComap(from), map(to), this + "[flatComapMapped]");
     }
 
-    default <T> Codec<T> flatComapMap(Function<R, T> to, Function<T, DataResult<R>> from) {
-        return of(flatComap(from), map(to), this + "[flatComapMapped]");
+    default <S> Codec<S> flatXmap(Function<R, DataResult<S>> to, Function<S, DataResult<R>> from) {
+        return Codec.of(flatComap(from), flatMap(to), this + "[flatXmapped]");
     }
 
-    default <T> Codec<T> flatXmap(Function<R, DataResult<T>> to, Function<T, DataResult<R>> from) {
-        return of(flatComap(from), flatMap(to), this + "[flatXmapped]");
+    default MapCodec<R> fieldOf(String name) {
+        return MapCodec.of(
+                Encoder.super.fieldOf(name),
+                Decoder.super.fieldOf(name),
+                toString()
+        );
     }
 
-    default Codec<R> validate(Function<R, DataResult<R>> function) {
-        return flatXmap(function, function);
-    }
-
-    default Codec<R> orElse(R value) {
-        return of(this, new Decoder<R>() {
-            @Override
-            public <T> DataResult<R> decode(DynamicOps<T> ops, T t) {
-                return Codec.this.decode(ops, t).orElse(() -> value);
-            }
-        }, this + "[safe]");
-    }
-
-    default Codec<R> mark(String marker) {
-        return of(this, this, this + "[" + marker + "]");
-    }
-
-    default boolean markedWith(String marker) {
-        return this.toString().contains("[" + marker + "]");
-    }
-
-    default FieldCodec<R> fieldOf(String name) {
-        return new FieldCodec<>(name, this);
-    }
-
-    Codec<Integer> INT = new Codec<Integer>() {
+    PrimitiveCodec<Byte> BYTE = new PrimitiveCodec<Byte>() {
         @Override
-        public <T> DataResult<T> encode(DynamicOps<T> ops, Integer input) {
-            return DataResult.success(ops.createInt(input));
+        public <T> T write(DynamicOps<T> ops, Byte input) {
+            return ops.createByte(input);
         }
 
         @Override
-        public <T> DataResult<Integer> decode(DynamicOps<T> ops, T t) {
-            return ops.getInt(t);
-        }
-
-        @Override
-        public String toString() {
-            return "Integer";
-        }
-    };
-
-    Codec<Float> FLOAT = new Codec<Float>() {
-        @Override
-        public <T> DataResult<T> encode(DynamicOps<T> ops, Float input) {
-            return DataResult.success(ops.createFloat(input));
-        }
-
-        @Override
-        public <T> DataResult<Float> decode(DynamicOps<T> ops, T t) {
-            return ops.getFloat(t);
-        }
-
-        @Override
-        public String toString() {
-            return "Float";
-        }
-    };
-
-    Codec<Double> DOUBLE = new Codec<Double>() {
-        @Override
-        public <T> DataResult<T> encode(DynamicOps<T> ops, Double input) {
-            return DataResult.success(ops.createDouble(input));
-        }
-
-        @Override
-        public <T> DataResult<Double> decode(DynamicOps<T> ops, T t) {
-            return ops.getDouble(t);
-        }
-
-        @Override
-        public String toString() {
-            return "Double";
-        }
-    };
-
-    Codec<Byte> BYTE = new Codec<Byte>() {
-        @Override
-        public <T> DataResult<T> encode(DynamicOps<T> ops, Byte input) {
-            return DataResult.success(ops.createByte(input));
-        }
-
-        @Override
-        public <T> DataResult<Byte> decode(DynamicOps<T> ops, T t) {
-            return ops.getByte(t);
+        public <T> DataResult<Byte> read(DynamicOps<T> ops, T input) {
+            return ops.getByte(input);
         }
 
         @Override
@@ -161,37 +78,122 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         }
     };
 
-    Codec<Boolean> BOOL = new Codec<Boolean>() {
+    PrimitiveCodec<Short> SHORT = new PrimitiveCodec<Short>() {
         @Override
-        public <T> DataResult<T> encode(DynamicOps<T> ops, Boolean input) {
-            return DataResult.success(ops.createBool(input));
+        public <T> T write(DynamicOps<T> ops, Short input) {
+            return ops.createShort(input);
         }
 
         @Override
-        public <T> DataResult<Boolean> decode(DynamicOps<T> ops, T t) {
-            return ops.getBool(t);
+        public <T> DataResult<Short> read(DynamicOps<T> ops, T input) {
+            return ops.getShort(input);
         }
 
         @Override
         public String toString() {
-            return "Boolean";
+            return "Short";
         }
     };
 
-    Codec<String> STRING = new Codec<String>() {
+    PrimitiveCodec<Integer> INT = new PrimitiveCodec<Integer>() {
         @Override
-        public <T> DataResult<T> encode(DynamicOps<T> ops, String input) {
-            return DataResult.success(ops.createString(input));
+        public <T> T write(DynamicOps<T> ops, Integer input) {
+            return ops.createInt(input);
         }
 
         @Override
-        public <T> DataResult<String> decode(DynamicOps<T> ops, T t) {
-            return ops.getString(t);
+        public <T> DataResult<Integer> read(DynamicOps<T> ops, T input) {
+            return ops.getInt(input);
+        }
+
+        @Override
+        public String toString() {
+            return "Integer";
+        }
+    };
+
+    PrimitiveCodec<Long> LONG = new PrimitiveCodec<Long>() {
+        @Override
+        public <T> T write(DynamicOps<T> ops, Long input) {
+            return ops.createLong(input);
+        }
+
+        @Override
+        public <T> DataResult<Long> read(DynamicOps<T> ops, T input) {
+            return ops.getLong(input);
+        }
+
+        @Override
+        public String toString() {
+            return "Long";
+        }
+    };
+
+    PrimitiveCodec<Float> FLOAT = new PrimitiveCodec<Float>() {
+        @Override
+        public <T> T write(DynamicOps<T> ops, Float input) {
+            return ops.createFloat(input);
+        }
+
+        @Override
+        public <T> DataResult<Float> read(DynamicOps<T> ops, T input) {
+            return ops.getFloat(input);
+        }
+
+        @Override
+        public String toString() {
+            return "Float";
+        }
+    };
+
+    PrimitiveCodec<Double> DOUBLE = new PrimitiveCodec<Double>() {
+        @Override
+        public <T> T write(DynamicOps<T> ops, Double input) {
+            return ops.createDouble(input);
+        }
+
+        @Override
+        public <T> DataResult<Double> read(DynamicOps<T> ops, T input) {
+            return ops.getDouble(input);
+        }
+
+        @Override
+        public String toString() {
+            return "Double";
+        }
+    };
+
+    PrimitiveCodec<String> STRING = new PrimitiveCodec<String>() {
+        @Override
+        public <T> T write(DynamicOps<T> ops, String input) {
+            return ops.createString(input);
+        }
+
+        @Override
+        public <T> DataResult<String> read(DynamicOps<T> ops, T input) {
+            return ops.getString(input);
         }
 
         @Override
         public String toString() {
             return "String";
+        }
+    };
+
+    PrimitiveCodec<Boolean> BOOL = new PrimitiveCodec<Boolean>() {
+        @Override
+        public <T> T write(DynamicOps<T> ops, Boolean input) {
+            return ops.createBool(input);
+        }
+
+        @Override
+        public <T> DataResult<Boolean> read(DynamicOps<T> ops, T input) {
+            return ops.getBool(input);
+        }
+
+        @Override
+        public String toString() {
+            return "Boolean";
         }
     };
 }

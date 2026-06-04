@@ -1,57 +1,45 @@
 package net.plugins.serialization.codecs;
 
-import net.plugins.serialization.DataResult;
-import net.plugins.serialization.ops.DynamicOps;
+import net.plugins.serialization.*;
+import net.plugins.util.MapLike;
+import net.plugins.util.Pair;
+import net.plugins.util.RecordBuilder;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public class MapCodec<E> implements Codec<Map<String, E>> {
-    private final Codec<E> codec;
-
-    @Override
-    public <T> DataResult<T> encode(DynamicOps<T> ops, Map<String, E> input) {
-        DynamicOps.MapBuilder<T> builder = ops.mapBuilder();
-        for (String key : input.keySet()) {
-            try {
-                builder.add(key, codec.encode(ops, input.get(key)).getOrThrow());
-            } catch (RuntimeException e) {
-                return DataResult.error(() -> "(" + this + "): " + e.getMessage(), builder.build());
+public abstract class MapCodec<R> implements MapEncoder<R>, MapDecoder<R> {
+    public static <R> MapCodec<R> of(MapEncoder<R> encoder, MapDecoder<R> decoder, String name) {
+        return new MapCodec<R>() {
+            @Override
+            public <T> DataResult<R> decode(DynamicOps<T> ops, MapLike<T> input) {
+                return decoder.decode(ops, input);
             }
-        }
-        return DataResult.success(builder.build());
-    }
 
-    @Override
-    public <T> DataResult<Map<String, E>> decode(DynamicOps<T> ops, T t) {
-        Map<String, T> map;
-
-        try {
-            map = ops.getMap(t).getOrThrow();
-        } catch (RuntimeException e) {
-            return DataResult.error(e);
-        }
-
-        Map<String, E> result = new HashMap<>();
-
-        for (String key : map.keySet()) {
-            try {
-                result.put(key, codec.decode(ops, map.get(key)).getOrThrow());
-            } catch (RuntimeException e) {
-                return DataResult.error(() -> "(" + this + ") " + e.getMessage(), result);
+            @Override
+            public <T> DataResult<Pair<R, T>> compressedDecode(DynamicOps<T> ops, T t) {
+                return decoder.compressedDecode(ops, t);
             }
-        }
 
-        return DataResult.success(result);
+            @Override
+            public <T> RecordBuilder<T> encode(DynamicOps<T> ops, R input, RecordBuilder<T> prefix) {
+                return encoder.encode(ops, input, prefix);
+            }
+
+            @Override
+            public <T> DataResult<T> compressedEncode(DynamicOps<T> ops, R input, T prefix) {
+                return encoder.compressedEncode(ops, input, prefix);
+            }
+
+            @Override
+            public String toString() {
+                return name;
+            }
+        };
     }
 
-    MapCodec(Codec<E> codec) {
-        this.codec = codec;
+    public static <R> MapCodec<R> of(MapEncoder<R> encoder, MapDecoder<R> decoder) {
+        return of(encoder, decoder, "MapCodec");
     }
 
-    @Override
-    public String toString() {
-        return codec + "[map]";
+    public Codec<R> codec() {
+        return Codec.of(this::compressedEncode, this::compressedDecode, toString());
     }
 }
