@@ -1,5 +1,7 @@
 package net.plugins.util;
 
+import net.plugins.serialization.DataResult;
+
 import java.util.function.Function;
 
 public class Pair<F,  S> {
@@ -37,5 +39,10 @@ public class Pair<F,  S> {
 
     public <F2, S2> Pair<F2, S2> map(Function<F, F2> first, Function<S, S2> second) {
         return mapFirst(first).mapSecond(second);
+    }
+
+    @Override
+    public String toString() {
+        return first + ":" + second;
     }
 }

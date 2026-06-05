@@ -5,6 +5,7 @@ import net.plugins.serialization.DynamicOps;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public interface MapLike<T> {
     T get(T key);
@@ -12,6 +13,8 @@ public interface MapLike<T> {
     T get(String key);
 
     Set<T> keySet();
+
+    Stream<Pair<T, T>> entries();
 
     static <T> MapLike<T> of(final Map<T, T> map, DynamicOps<T> ops) {
         return new MapLike<T>() {
@@ -28,6 +31,13 @@ public interface MapLike<T> {
             @Override
             public Set<T> keySet() {
                 return map.keySet();
+            }
+
+            @Override
+            public Stream<Pair<T, T>> entries() {
+                Stream.Builder<Pair<T, T>> builder = Stream.builder();
+                map.forEach((t1, t2) -> builder.add(Pair.of(t1, t2)));
+                return builder.build();
             }
         };
     }

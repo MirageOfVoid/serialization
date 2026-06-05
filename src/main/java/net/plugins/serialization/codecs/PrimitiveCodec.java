@@ -11,7 +11,7 @@ public interface PrimitiveCodec<R> extends Codec<R> {
 
     @Override
     default <T> DataResult<T> encode(DynamicOps<T> ops, R input, T prefix) {
-        return ops.mergeToPrimitive(prefix, write(ops, input));
+        return DataResult.success(write(ops, input));
     }
 
     @Override

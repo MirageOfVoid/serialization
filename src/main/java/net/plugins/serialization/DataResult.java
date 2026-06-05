@@ -216,7 +216,7 @@ public sealed interface DataResult<R> permits DataResult.Success, DataResult.Err
 
             DataResult<T> result = mapper.apply(partialValue.get());
             if (result instanceof DataResult.Success<T> success) {
-                return new Error<>(messageSupplier, Optional.of((success.value())));
+                return new Error<>(messageSupplier, Optional.of(success.value()));
             } else if (result instanceof DataResult.Error<T> error) {
                 return new Error<>(() -> mergeMessages(getMessage(), error.getMessage()), error.partialValue);
             } else {

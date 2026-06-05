@@ -1,9 +1,12 @@
 package net.plugins.serialization.codecs;
 
 import net.plugins.serialization.*;
+import net.plugins.serialization.building.CodecBuilder;
 import net.plugins.util.MapLike;
 import net.plugins.util.Pair;
 import net.plugins.util.RecordBuilder;
+
+import java.util.function.Function;
 
 public abstract class MapCodec<R> implements MapEncoder<R>, MapDecoder<R> {
     public static <R> MapCodec<R> of(MapEncoder<R> encoder, MapDecoder<R> decoder, String name) {
@@ -40,6 +43,40 @@ public abstract class MapCodec<R> implements MapEncoder<R>, MapDecoder<R> {
     }
 
     public Codec<R> codec() {
-        return Codec.of(this::compressedEncode, this::compressedDecode, toString());
+        return new MapCodecCodec<>(this);
+    }
+
+    public record MapCodecCodec<R>(MapCodec<R> codec) implements Codec<R> {
+
+        @Override
+        public <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T t) {
+            return codec.compressedDecode(ops, t);
+        }
+
+        @Override
+        public <T> DataResult<T> encode(DynamicOps<T> ops, R input, T prefix) {
+//            return codec.encode(ops, input, ops.mapBuilder()).build(prefix);
+            return codec.compressedEncode(ops, input, prefix);
+        }
+    }
+
+    public <U> MapCodec<U> xmap(Function<R, U> to, Function<U, R> from) {
+        return MapCodec.of(comap(from), map(to), toString() + "[xmapped]");
+    }
+
+    public <U> MapCodec<U> flatComapMap(Function<R, U> to, Function<U, DataResult<R>> from) {
+        return MapCodec.of(flatComap(from), map(to), toString() + "[flatComapMapped]");
+    }
+
+    public <U> MapCodec<U> comapFlatMap(Function<R, DataResult<U>> to, Function<U, R> from) {
+        return MapCodec.of(comap(from), flatMap(to), toString() + "[comapFlatMapped]");
+    }
+
+    public <U> MapCodec<U> flatXmap(Function<R, DataResult<U>> to, Function<U, DataResult<R>> from) {
+        return MapCodec.of(flatComap(from), flatMap(to), toString() + "[flatXmapped]");
+    }
+
+    public <O> CodecBuilder<O, R> forGetter(Function<O, R> getter) {
+        return CodecBuilder.of(this, getter);
     }
 }

@@ -10,7 +10,7 @@ public interface RecordBuilder<T> {
 
     RecordBuilder<T> add(T key, DataResult<T> value);
 
-    RecordBuilder<T> add(DataResult<T> key, DataResult<T> value);
+    RecordBuilder<T> withErrorsFrom(DataResult<?> result);
 
     DataResult<T> build(T prefix);
 
@@ -24,5 +24,61 @@ public interface RecordBuilder<T> {
 
     default DataResult<T> build() {
         return build(ops().emptyMap());
+    }
+
+    abstract class AbstractRecordBuilder<T, B> implements RecordBuilder<T> {
+        protected DataResult<B> builder = DataResult.success(initBuilder());
+        private final DynamicOps<T> ops;
+
+        protected abstract B initBuilder();
+        protected abstract void append(String key, T value, B builder);
+        protected abstract DataResult<T> build(B builder, T prefix);
+
+        public AbstractRecordBuilder(DynamicOps<T> ops) {
+            this.ops = ops;
+        }
+
+        @Override
+        public DynamicOps<T> ops() {
+            return ops;
+        }
+
+        @Override
+        public RecordBuilder<T> add(T key, T value) {
+            builder = ops.getString(key).flatMap(k -> {
+                add(k, value);
+                return builder;
+            });
+            return this;
+        }
+
+        @Override
+        public RecordBuilder<T> add(String key, T value) {
+            builder = builder.flatMap(b -> {
+                append(key, value, b);
+                return builder;
+            });
+            return this;
+        }
+
+        @Override
+        public RecordBuilder<T> add(T key, DataResult<T> value) {
+            if (value.isSuccess())
+                return add(key, value.getOrThrow());
+            return add(key, ops.empty());
+        }
+
+        @Override
+        public RecordBuilder<T> withErrorsFrom(DataResult<?> result) {
+            builder = builder.flatMap(b -> result.map(r -> b));
+            return this;
+        }
+
+        @Override
+        public DataResult<T> build(T prefix) {
+            DataResult<T> result = builder.flatMap(b -> build(b, prefix));
+            builder = DataResult.success(initBuilder());
+            return result;
+        }
     }
 }

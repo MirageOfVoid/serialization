@@ -53,6 +53,14 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         return Codec.of(flatComap(from), flatMap(to), this + "[flatXmapped]");
     }
 
+    default Codec<R> orElse(R r) {
+        return Codec.of(
+                this,
+                Decoder.super.orElse(r),
+                toString() + "[safe]"
+        );
+    }
+
     default MapCodec<R> fieldOf(String name) {
         return MapCodec.of(
                 Encoder.super.fieldOf(name),
