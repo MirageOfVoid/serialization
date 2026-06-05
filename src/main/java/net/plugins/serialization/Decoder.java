@@ -31,18 +31,14 @@ public interface Decoder<R> {
     }
 
     default MapDecoder<R> fieldOf(String name) {
-        return new MapDecoder<R>() {
-            @Override
-            public <T> DataResult<R> decode(DynamicOps<T> ops, MapLike<T> input) {
-                if (!input.keySet().contains(ops.createString(name))) {
-                    return DataResult.error("No field " + name + " in " + input);
-                }
-                return Decoder.this.parse(ops, input.get(name));
-            }
+        return new FieldDecoder<>(this, name);
+    }
 
+    default Decoder<R> orElse(R r) {
+        return new Decoder<R>() {
             @Override
-            public <T> DataResult<Pair<R, T>> compressedDecode(DynamicOps<T> ops, T t) {
-                return Decoder.this.decode(ops, t);
+            public <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T t) {
+                return Decoder.this.decode(ops, t).orElse(() -> Pair.of(r, t));
             }
         };
     }

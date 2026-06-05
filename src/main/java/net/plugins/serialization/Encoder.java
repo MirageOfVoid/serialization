@@ -30,16 +30,6 @@ public interface Encoder<R> {
     }
 
     default MapEncoder<R> fieldOf(String name) {
-        return new MapEncoder<R>() {
-            @Override
-            public <T> RecordBuilder<T> encode(DynamicOps<T> ops, R input, RecordBuilder<T> prefix) {
-                return prefix.add(name, Encoder.this.encodeStart(ops, input));
-            }
-
-            @Override
-            public <T> DataResult<T> compressedEncode(DynamicOps<T> ops, R input, T prefix) {
-                return Encoder.this.encode(ops, input, prefix);
-            }
-        };
+        return new FieldEncoder<>(this, name);
     }
 }
