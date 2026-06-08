@@ -1,8 +1,6 @@
 package net.plugins.serialization;
 
 import net.plugins.util.MapLike;
-import net.plugins.util.Pair;
-import net.plugins.util.RecordBuilder;
 
 public class FieldDecoder<R> implements MapDecoder<R> {
     private final Decoder<R> decoder;
@@ -19,14 +17,20 @@ public class FieldDecoder<R> implements MapDecoder<R> {
         }
         return decoder.parse(ops, t);
     }
-
-    @Override
-    public <T> DataResult<Pair<R, T>> compressedDecode(DynamicOps<T> ops, T t) {
-        return decoder.decode(ops, t);
-    }
-
     public FieldDecoder(Decoder<R> decoder, String name) {
         this.decoder = decoder;
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "FieldOf(" + name + ")-FROM";
+    }
+
+    public static String getFieldName(MapDecoder<?> mapDecoder) {
+        String s = mapDecoder.toString();
+        @SuppressWarnings("all")
+        String s1 = s.substring(8).replaceAll(")-FROM".toString(), "");
+        return s1;
     }
 }

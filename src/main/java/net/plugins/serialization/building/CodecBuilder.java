@@ -39,10 +39,6 @@ public class CodecBuilder<O, F> {
         return MapCodec.of(builder.encoder, builder.decoder);
     }
 
-    public static <O> Codec<O> codec(Function<Instance<O>, CodecBuilder<O, O>> function) {
-        return mapCodec(function).codec();
-    }
-
     public static final class Instance<O> {
         public <T1> Products.P1<O, T1> group(CodecBuilder<O, T1> t1) {
             return new Products.P1<>(t1);

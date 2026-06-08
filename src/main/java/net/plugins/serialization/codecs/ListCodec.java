@@ -11,8 +11,8 @@ public class ListCodec<E> implements Codec<List<E>> {
     private final Codec<E> codec;
 
     @Override
-    public <T> DataResult<Pair<List<E>, T>> decode(DynamicOps<T> ops, T t) {
-        return ops.getList(t).flatMap(list -> {
+    public <T> DataResult<Pair<List<E>, T>> decode(DynamicOps<T> ops, T input) {
+        return ops.getList(input).flatMap(list -> {
             State<T> state = new State<>(ops);
             list.forEach(state::add);
             return state.build();
