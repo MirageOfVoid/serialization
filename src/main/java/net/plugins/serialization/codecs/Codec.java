@@ -13,8 +13,8 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
     static <R> Codec<R> of(Encoder<R> encoder, Decoder<R> decoder, String name) {
         return new Codec<R>() {
             @Override
-            public <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T t) {
-                return decoder.decode(ops, t);
+            public <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T input) {
+                return decoder.decode(ops, input);
             }
 
             @Override

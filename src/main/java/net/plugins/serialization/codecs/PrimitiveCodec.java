@@ -11,11 +11,11 @@ public interface PrimitiveCodec<R> extends Codec<R> {
 
     @Override
     default <T> DataResult<T> encode(DynamicOps<T> ops, R input, T prefix) {
-        return DataResult.success(write(ops, input));
+        return ops.mergeToPrimitive(prefix, write(ops, input));
     }
 
     @Override
-    default <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T t) {
-        return read(ops, t).map(r -> Pair.of(r, ops.empty()));
+    default <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T input) {
+        return read(ops, input).map(r -> Pair.of(r, ops.empty()));
     }
 }

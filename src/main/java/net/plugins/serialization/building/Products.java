@@ -1,13 +1,11 @@
 package net.plugins.serialization.building;
 
-import net.plugins.Main;
 import net.plugins.serialization.DataResult;
 import net.plugins.serialization.DynamicOps;
 import net.plugins.serialization.MapDecoder;
 import net.plugins.serialization.MapEncoder;
 import net.plugins.serialization.codecs.MapCodec;
 import net.plugins.util.MapLike;
-import net.plugins.util.Pair;
 import net.plugins.util.RecordBuilder;
 import net.plugins.util.function.Function3;
 
@@ -44,13 +42,6 @@ public interface Products {
                 t2.encoder().encode(ops, t2.getter().apply(input), prefix);
                 return prefix;
             }
-
-            @Override
-            public <T> DataResult<T> compressedEncode(DynamicOps<T> ops, O input, T prefix) {
-                t1.encoder().compressedEncode(ops, t1.getter().apply(input), prefix);
-                t2.encoder().compressedEncode(ops, t2.getter().apply(input), prefix);
-                return DataResult.success(prefix);
-            }
         }, new MapDecoder<O>() {
             @Override
             public <T> DataResult<O> decode(DynamicOps<T> ops, MapLike<T> input) {
@@ -59,21 +50,6 @@ public interface Products {
                                 function.apply(r, r1)
                         )
                 );
-            }
-
-            @Override
-            public <T> DataResult<Pair<O, T>> compressedDecode(DynamicOps<T> ops, T t) {
-                DataResult<O> result = t1.decoder().compressedDecode(ops, t).flatMap(r ->
-                        t2.decoder().compressedDecode(ops, t).map(r1 ->
-                                function.apply(r.getFirst(), r1.getFirst())
-                        )
-                );
-
-                if (result.isError()) {
-                    return result.error().get().cast();
-                }
-
-                return DataResult.success(Pair.of(result.getOrThrow(), t));
             }
         }, o -> o);
     }
@@ -87,14 +63,6 @@ public interface Products {
                 t3.encoder().encode(ops, t3.getter().apply(input), prefix);
                 return prefix;
             }
-
-            @Override
-            public <T> DataResult<T> compressedEncode(DynamicOps<T> ops, O input, T prefix) {
-                t1.encoder().compressedEncode(ops, t1.getter().apply(input), prefix);
-                t2.encoder().compressedEncode(ops, t2.getter().apply(input), prefix);
-                t3.encoder().compressedEncode(ops, t3.getter().apply(input), prefix);
-                return DataResult.success(prefix);
-            }
         }, new MapDecoder<O>() {
             @Override
             public <T> DataResult<O> decode(DynamicOps<T> ops, MapLike<T> input) {
@@ -105,23 +73,6 @@ public interface Products {
                                 )
                         )
                 );
-            }
-
-            @Override
-            public <T> DataResult<Pair<O, T>> compressedDecode(DynamicOps<T> ops, T t) {
-                DataResult<O> result = t1.decoder().compressedDecode(ops, t).flatMap(r ->
-                        t2.decoder().compressedDecode(ops, t).flatMap(r1 ->
-                                t3.decoder().compressedDecode(ops, t).map(r2 ->
-                                        function.apply(r.getFirst(), r1.getFirst(), r2.getFirst())
-                                )
-                        )
-                );
-
-                if (result.isError()) {
-                    return result.error().get().cast();
-                }
-
-                return DataResult.success(Pair.of(result.getOrThrow(), t));
             }
         }, o -> o);
     }

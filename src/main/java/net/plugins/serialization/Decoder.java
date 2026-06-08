@@ -6,17 +6,17 @@ import net.plugins.util.Pair;
 import java.util.function.Function;
 
 public interface Decoder<R> {
-    <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T t);
+    <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T input);
 
-    default <T> DataResult<R> parse(DynamicOps<T> ops, T t) {
-        return decode(ops, t).map(Pair::getFirst);
+    default <T> DataResult<R> parse(DynamicOps<T> ops, T input) {
+        return decode(ops, input).map(Pair::getFirst);
     }
 
     default <U> Decoder<U> map(Function<R, U> mapper) {
         return new Decoder<U>() {
             @Override
-            public <T> DataResult<Pair<U, T>> decode(DynamicOps<T> ops, T t) {
-                return Decoder.this.decode(ops, t).map(pair -> pair.mapFirst(mapper));
+            public <T> DataResult<Pair<U, T>> decode(DynamicOps<T> ops, T input) {
+                return Decoder.this.decode(ops, input).map(pair -> pair.mapFirst(mapper));
             }
         };
     }
@@ -24,8 +24,8 @@ public interface Decoder<R> {
     default <U> Decoder<U> flatMap(Function<R, DataResult<U>> mapper) {
         return new Decoder<U>() {
             @Override
-            public <T> DataResult<Pair<U, T>> decode(DynamicOps<T> ops, T t) {
-                return Decoder.this.decode(ops, t).flatMap(p -> mapper.apply(p.getFirst()).map(r -> Pair.of(r, p.getSecond())));
+            public <T> DataResult<Pair<U, T>> decode(DynamicOps<T> ops, T input) {
+                return Decoder.this.decode(ops, input).flatMap(p -> mapper.apply(p.getFirst()).map(r -> Pair.of(r, p.getSecond())));
             }
         };
     }
@@ -37,8 +37,8 @@ public interface Decoder<R> {
     default Decoder<R> orElse(R r) {
         return new Decoder<R>() {
             @Override
-            public <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T t) {
-                return Decoder.this.decode(ops, t).orElse(() -> Pair.of(r, t));
+            public <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T input) {
+                return Decoder.this.decode(ops, input).orElse(() -> Pair.of(r, input));
             }
         };
     }

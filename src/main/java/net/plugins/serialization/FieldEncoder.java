@@ -11,13 +11,13 @@ public class FieldEncoder<R> implements MapEncoder<R> {
         return prefix.add(name, encoder.encodeStart(ops, input));
     }
 
-    @Override
-    public <T> DataResult<T> compressedEncode(DynamicOps<T> ops, R input, T prefix) {
-        return encoder.encode(ops, input, prefix);
-    }
-
     public FieldEncoder(Encoder<R> encoder, String name) {
         this.encoder = encoder;
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

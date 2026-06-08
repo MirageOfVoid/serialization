@@ -84,10 +84,8 @@ public interface DynamicOps<T> {
     DataResult<T> getFromList(T list, int index);
 
     default DataResult<T> mergeToPrimitive(T prefix, T value) {
-        if (!Objects.equals(prefix, value)) {
-            return DataResult.error("Can not merge value " + value + " to " + prefix);
-        }
-        return DataResult.success(value);
+        // todo
+        return DataResult.error("Unsupported");
     }
 
     T empty();
@@ -97,6 +95,10 @@ public interface DynamicOps<T> {
     T emptyList();
 
     T clone(T t);
+
+    boolean isMap(T t);
+
+    boolean isList(T t);
 
     default ListBuilder<T> listBuilder() {
         return new ListBuilder<>(this::createList);

@@ -3,7 +3,6 @@ package net.plugins.serialization.codecs;
 import net.plugins.serialization.*;
 import net.plugins.serialization.building.CodecBuilder;
 import net.plugins.util.MapLike;
-import net.plugins.util.Pair;
 import net.plugins.util.RecordBuilder;
 
 import java.util.function.Function;
@@ -17,18 +16,8 @@ public abstract class MapCodec<R> implements MapEncoder<R>, MapDecoder<R> {
             }
 
             @Override
-            public <T> DataResult<Pair<R, T>> compressedDecode(DynamicOps<T> ops, T t) {
-                return decoder.compressedDecode(ops, t);
-            }
-
-            @Override
             public <T> RecordBuilder<T> encode(DynamicOps<T> ops, R input, RecordBuilder<T> prefix) {
                 return encoder.encode(ops, input, prefix);
-            }
-
-            @Override
-            public <T> DataResult<T> compressedEncode(DynamicOps<T> ops, R input, T prefix) {
-                return encoder.compressedEncode(ops, input, prefix);
             }
 
             @Override
@@ -42,22 +31,12 @@ public abstract class MapCodec<R> implements MapEncoder<R>, MapDecoder<R> {
         return of(encoder, decoder, "MapCodec");
     }
 
-    public Codec<R> codec() {
-        return new MapCodecCodec<>(this);
-    }
-
-    public record MapCodecCodec<R>(MapCodec<R> codec) implements Codec<R> {
-
-        @Override
-        public <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T t) {
-            return codec.compressedDecode(ops, t);
-        }
-
-        @Override
-        public <T> DataResult<T> encode(DynamicOps<T> ops, R input, T prefix) {
-//            return codec.encode(ops, input, ops.mapBuilder()).build(prefix);
-            return codec.compressedEncode(ops, input, prefix);
-        }
+    public Codec<R> compress() {
+        return Codec.of(
+                MapEncoder.super.compress(),
+                MapDecoder.super.compress(),
+                toString()
+        );
     }
 
     public <U> MapCodec<U> xmap(Function<R, U> to, Function<U, R> from) {
