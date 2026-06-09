@@ -7,6 +7,7 @@ import net.plugins.serialization.Encoder;
 import net.plugins.util.Pair;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 public interface Codec<R> extends Encoder<R>, Decoder<R> {
@@ -33,8 +34,16 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         return of(encoder, decoder, "Codec");
     }
 
+    static <F, S> Codec<Pair<F, S>> pair(Codec<F> firstCodec, Codec<S> secondCodec) {
+        return new PairCodec<>(firstCodec, secondCodec).build();
+    }
+
     default Codec<List<R>> listOf() {
         return new ListCodec<>(this);
+    }
+
+    default Codec<Optional<R>> optionalOf() {
+        return new OptionalCodec<>(this);
     }
 
     default <S> Codec<S> xmap(Function<R, S> to, Function<S, R> from) {
@@ -53,6 +62,10 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         return Codec.of(flatComap(from), flatMap(to), this + "[flatXmapped]");
     }
 
+    default Codec<R> validate(Function<R, DataResult<R>> checker) {
+        return flatXmap(checker, checker);
+    }
+
     default Codec<R> orElse(R r) {
         return Codec.of(
                 this,
@@ -67,6 +80,30 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
                 Decoder.super.fieldOf(name),
                 toString()
         );
+    }
+
+    default MapCodec<Optional<R>> optionalFieldOf(String name) {
+        return optionalFieldOf(name, false);
+    }
+
+    default MapCodec<Optional<R>> successfulOptionalFieldOf(String name) {
+        return optionalFieldOf(name, true);
+    }
+
+    default MapCodec<Optional<R>> optionalFieldOf(String name, boolean successful) {
+        return new OptionalFieldCodec<>(this, name, successful);
+    }
+
+    default MapCodec<R> optionalFieldOf(String name, boolean successful, R defaultValue) {
+        return optionalFieldOf(name, successful).xmap(opt -> opt.orElse(defaultValue), Optional::of);
+    }
+
+    default Codec<R> mark(String marker) {
+        return of(this, this, toString() + "[" + marker + "]");
+    }
+
+    default boolean markedWith(String marker) {
+        return toString().contains("[" + marker + "]");
     }
 
     PrimitiveCodec<Byte> BYTE = new PrimitiveCodec<Byte>() {

@@ -2,6 +2,7 @@ package net.plugins.serialization.codecs;
 
 import net.plugins.serialization.DataResult;
 import net.plugins.serialization.DynamicOps;
+import net.plugins.util.ListBuilder;
 import net.plugins.util.Pair;
 
 import java.util.ArrayList;
@@ -21,13 +22,11 @@ public class ListCodec<E> implements Codec<List<E>> {
 
     @Override
     public <T> DataResult<T> encode(DynamicOps<T> ops, List<E> input, T prefix) {
-        DynamicOps.ListBuilder<T> builder = ops.listBuilder();
+        ListBuilder<T> builder = ops.listBuilder();
         for (E e : input) {
-            if (!builder.add(codec.encodeStart(ops, e))) {
-                return DataResult.error(() -> this + ": encoding list failed", builder.build());
-            }
+            builder.add(codec.encodeStart(ops, e));
         }
-        return DataResult.success(builder.build());
+        return builder.build(prefix);
     }
 
     public ListCodec(Codec<E> codec) {
@@ -37,27 +36,26 @@ public class ListCodec<E> implements Codec<List<E>> {
     private class State<T> {
         private final DynamicOps<T> ops;
         private final List<E> elements = new ArrayList<>();
-        private final DynamicOps.ListBuilder<T> fails;
+        private final List<T> fails = new ArrayList<>();
+        DataResult<Object> result = DataResult.success(new Object());
 
         private State(DynamicOps<T> ops) {
             this.ops = ops;
-            this.fails = ops.listBuilder();
         }
 
         public void add(T element) {
-            DataResult<Pair<E, T>> result = codec.decode(ops, element);
-            result.ifError(ignored -> fails.add(element));
-            result.resultOrPartial().ifPresent(pair -> elements.add(pair.getFirst()));
+            DataResult<Pair<E, T>> elementResult = codec.decode(ops, element);
+            elementResult.ifError(error -> {
+                fails.add(element);
+                result = error.cast();
+            });
+            elementResult.ifSuccess(pair -> elements.add(pair.getFirst()));
         }
 
         public DataResult<Pair<List<E>, T>> build() {
-            if (fails.isEmpty()) {
-                Pair<List<E>, T> pair = Pair.of(elements, ops.empty());
-                return DataResult.success(pair);
-            }
-            T errors = fails.build();
-            Pair<List<E>, T> pair = Pair.of(elements, errors);
-            return DataResult.error(() -> this + ": decoding list failed", pair);
+            T errors = ops.createList(fails);
+            Pair<List<E>, T> pair = Pair.of(List.copyOf(elements), errors);
+            return result.map(o -> pair).setPartial(pair);
         }
     }
 

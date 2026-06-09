@@ -1,11 +1,10 @@
 package net.plugins.serialization;
 
 import com.google.gson.*;
+import net.plugins.util.ListBuilder;
 import net.plugins.util.MapLike;
-import net.plugins.util.Pair;
 import net.plugins.util.RecordBuilder;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -164,6 +163,31 @@ public class JsonOps implements DynamicOps<JsonElement> {
     }
 
     @Override
+    public boolean isMap(JsonElement element) {
+        return element.isJsonObject();
+    }
+
+    @Override
+    public boolean isList(JsonElement element) {
+        return element.isJsonArray();
+    }
+
+    @Override
+    public boolean isPrimitive(JsonElement element) {
+        return element.isJsonPrimitive();
+    }
+
+    @Override
+    public boolean isEmpty(JsonElement element) {
+        return element.isJsonNull();
+    }
+
+    @Override
+    public ListBuilder<JsonElement> listBuilder() {
+        return new JsonArrayBuilder(INSTANCE);
+    }
+
+    @Override
     public RecordBuilder<JsonElement> mapBuilder() {
         return new JsonRecordBuilder(INSTANCE);
     }
@@ -179,8 +203,9 @@ public class JsonOps implements DynamicOps<JsonElement> {
         }
 
         @Override
-        protected void append(String key, JsonElement value, JsonObject builder) {
+        protected JsonObject append(String key, JsonElement value, JsonObject builder) {
             builder.add(key, value);
+            return builder;
         }
 
         @Override
@@ -196,6 +221,37 @@ public class JsonOps implements DynamicOps<JsonElement> {
                 return DataResult.success(result);
             }
             return DataResult.error("Not a json object: " + prefix);
+        }
+    }
+
+    public static final class JsonArrayBuilder extends ListBuilder.AbstractListBuilder<JsonElement, JsonArray> {
+        public JsonArrayBuilder(DynamicOps<JsonElement> ops) {
+            super(ops);
+        }
+
+        @Override
+        protected JsonArray initBuilder() {
+            return new JsonArray();
+        }
+
+        @Override
+        protected JsonArray append(JsonArray builder, JsonElement element) {
+            builder.add(element);
+            return builder;
+        }
+
+        @Override
+        protected DataResult<JsonElement> build(JsonArray builder, JsonElement prefix) {
+            if (prefix == null || prefix.isJsonNull()) {
+                return DataResult.success(builder);
+            }
+            if (prefix.isJsonArray()) {
+                JsonArray array = new JsonArray();
+                array.addAll(builder);
+                array.addAll(prefix.getAsJsonArray());
+                return DataResult.success(array);
+            }
+            return DataResult.error("Not a json array: " + prefix);
         }
     }
 }

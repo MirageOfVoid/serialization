@@ -29,4 +29,13 @@ public interface MapDecoder<R> {
     default Decoder<R> compress() {
         return new CompressedMapDecoder<>(this);
     }
+
+    default MapDecoder<R> orElse(R defaultValue) {
+        return new MapDecoder<R>() {
+            @Override
+            public <T> DataResult<R> decode(DynamicOps<T> ops, MapLike<T> input) {
+                return MapDecoder.this.decode(ops, input).orElse(() -> defaultValue);
+            }
+        };
+    }
 }
