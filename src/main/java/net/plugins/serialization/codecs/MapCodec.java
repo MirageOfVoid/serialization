@@ -1,7 +1,7 @@
 package net.plugins.serialization.codecs;
 
 import net.plugins.serialization.*;
-import net.plugins.serialization.building.CodecBuilder;
+import net.plugins.serialization.building.RecordCodecBuilder;
 import net.plugins.util.MapLike;
 import net.plugins.util.RecordBuilder;
 
@@ -55,7 +55,23 @@ public abstract class MapCodec<R> implements MapEncoder<R>, MapDecoder<R> {
         return MapCodec.of(flatComap(from), flatMap(to), toString() + "[flatXmapped]");
     }
 
-    public <O> CodecBuilder<O, R> forGetter(Function<O, R> getter) {
-        return CodecBuilder.of(this, getter);
+    public MapCodec<R> validate(Function<R, DataResult<R>> checker) {
+        return flatXmap(checker, checker);
+    }
+
+    public <O> RecordCodecBuilder<O, R> forGetter(Function<O, R> getter) {
+        return RecordCodecBuilder.of(this, getter);
+    }
+
+    public MapCodec<R> orElse(R defaultValue) {
+        return MapCodec.of(
+                this,
+                MapDecoder.super.orElse(defaultValue),
+                toString()
+        );
+    }
+
+    public MapCodec<R> fieldOf(String name) {
+        return compress().fieldOf(name);
     }
 }

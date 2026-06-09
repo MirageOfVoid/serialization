@@ -1,5 +1,6 @@
 package net.plugins.util;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import net.plugins.serialization.DataResult;
 import net.plugins.serialization.DynamicOps;
 
@@ -31,7 +32,7 @@ public interface RecordBuilder<T> {
         private final DynamicOps<T> ops;
 
         protected abstract B initBuilder();
-        protected abstract void append(String key, T value, B builder);
+        protected abstract B append(String key, T value, B builder);
         protected abstract DataResult<T> build(B builder, T prefix);
 
         public AbstractRecordBuilder(DynamicOps<T> ops) {
@@ -54,10 +55,7 @@ public interface RecordBuilder<T> {
 
         @Override
         public RecordBuilder<T> add(String key, T value) {
-            builder = builder.flatMap(b -> {
-                append(key, value, b);
-                return builder;
-            });
+            builder = builder.map(b -> append(key, value, b));
             return this;
         }
 

@@ -143,7 +143,7 @@ public sealed interface DataResult<R> permits DataResult.Success, DataResult.Err
 
         @Override
         public @NotNull String toString() {
-            return "{DataResult.Success}";
+            return "{DataResult.Success[" + value + "]}";
         }
     }
 

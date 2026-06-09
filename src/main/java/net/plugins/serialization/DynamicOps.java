@@ -1,5 +1,6 @@
 package net.plugins.serialization;
 
+import net.plugins.util.ListBuilder;
 import net.plugins.util.MapLike;
 import net.plugins.util.RecordBuilder;
 
@@ -84,8 +85,7 @@ public interface DynamicOps<T> {
     DataResult<T> getFromList(T list, int index);
 
     default DataResult<T> mergeToPrimitive(T prefix, T value) {
-        // todo
-        return DataResult.error("Unsupported");
+        return DataResult.success(value);
     }
 
     T empty();
@@ -100,39 +100,11 @@ public interface DynamicOps<T> {
 
     boolean isList(T t);
 
-    default ListBuilder<T> listBuilder() {
-        return new ListBuilder<>(this::createList);
-    }
+    boolean isPrimitive(T t);
+
+    boolean isEmpty(T t);
+
+    ListBuilder<T> listBuilder();
 
     RecordBuilder<T> mapBuilder();
-
-    class ListBuilder<E> {
-        protected final List<E> list = new ArrayList<>();
-
-        private final Function<List<E>, E> function;
-
-        public boolean add(DataResult<E> e) {
-            if (e.isSuccess()) {
-                list.add(e.getOrThrow());
-                return true;
-            }
-            return false;
-        }
-
-        public void add(E e) {
-            list.add(e);
-        }
-
-        public boolean isEmpty() {
-            return list.isEmpty();
-        }
-
-        public E build() {
-            return function.apply(list);
-        }
-
-        public ListBuilder(Function<List<E>, E> function) {
-            this.function = function;
-        }
-    }
 }
