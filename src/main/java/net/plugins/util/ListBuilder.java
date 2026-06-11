@@ -45,8 +45,8 @@ public interface ListBuilder<T> {
 
         @Override
         public ListBuilder<T> add(DataResult<T> element) {
-            builder = builder.merge2(this::append, element);
-            return add(ops.empty());
+            builder = builder.apply(this::append, element);
+            return this;
         }
 
         @Override

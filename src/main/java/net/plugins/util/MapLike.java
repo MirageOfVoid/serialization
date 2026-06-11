@@ -39,6 +39,11 @@ public interface MapLike<T> {
                 map.forEach((t1, t2) -> builder.add(Pair.of(t1, t2)));
                 return builder.build();
             }
+
+            @Override
+            public String toString() {
+                return map.toString();
+            }
         };
     }
 

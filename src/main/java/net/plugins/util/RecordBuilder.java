@@ -1,6 +1,5 @@
 package net.plugins.util;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import net.plugins.serialization.DataResult;
 import net.plugins.serialization.DynamicOps;
 
@@ -70,7 +69,7 @@ public interface RecordBuilder<T> {
 
         @Override
         public RecordBuilder<T> add(String key, DataResult<T> value) {
-            builder = builder.merge2((b, v) -> append(key, v, b), value);
+            builder = builder.apply((b, v) -> append(key, v, b), value);
             return this;
         }
 
