@@ -82,12 +82,8 @@ public sealed interface DataResult<R> extends App<DataResult.Mu, R> permits Data
 
     <R2> DataResult<R2> ap(DataResult<Function<R, R2>> functionResult);
 
-    default <R2, S> DataResult<S> merge2(BiFunction<R, R2, S> function, DataResult<R2> second) {
+    default <R2, S> DataResult<S> apply(BiFunction<R, R2, S> function, DataResult<R2> second) {
         return unbox(instance().apply2(function, this, second));
-    }
-
-    default <R2, R3, S> DataResult<S> merge3(Function3<R, R2, R3, S> function, DataResult<R2> second, DataResult<R3> third) {
-        return unbox(instance().apply3(function, this, second, third));
     }
 
     record Success<R>(R value) implements DataResult<R> {
@@ -258,7 +254,7 @@ public sealed interface DataResult<R> extends App<DataResult.Mu, R> permits Data
             if (result instanceof DataResult.Success<T> success) {
                 return new Error<>(messageSupplier, Optional.of(success.value()));
             } else if (result instanceof DataResult.Error<T> error) {
-                return new Error<>(() -> mergeMessages(getMessage(), error.getMessage()), error.partialValue);
+                return new Error<>(() -> appendMessages(getMessage(), error.getMessage()), error.partialValue);
             } else {
                 throw new UnsupportedOperationException();
             }
@@ -308,10 +304,6 @@ public sealed interface DataResult<R> extends App<DataResult.Mu, R> permits Data
         @Override
         public @NotNull String toString() {
             return "{DataResult.Error[" + getMessage() + partialValue.map(r -> ": " + r + "]").orElse("]}");
-        }
-
-        private static String mergeMessages(String first, String second) {
-            return first + "; " + second;
         }
     }
 
