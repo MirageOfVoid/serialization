@@ -61,9 +61,17 @@ public interface RecordBuilder<T> {
 
         @Override
         public RecordBuilder<T> add(T key, DataResult<T> value) {
-            if (value.isSuccess())
-                return add(key, value.getOrThrow());
-            return add(key, ops.empty());
+            builder = ops.getString(key).flatMap(k -> {
+                add(k, value);
+                return builder;
+            });
+            return this;
+        }
+
+        @Override
+        public RecordBuilder<T> add(String key, DataResult<T> value) {
+            builder = builder.merge2((b, v) -> append(key, v, b), value);
+            return this;
         }
 
         @Override

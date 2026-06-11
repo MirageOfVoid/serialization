@@ -1,5 +1,11 @@
 package net.plugins.util.function;
 
-public interface Function5<T1, T2, T3, T4, T5, R> {
-    R apply(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5);
+import java.util.function.BiFunction;
+
+public interface Function5<A, B, C, D, E, R> {
+    R apply(A a, B b, C c, D d, E e);
+
+    default BiFunction<A, B, Function3<C, D, E, R>> curry() {
+        return (a, b) -> (c, d, e) -> apply(a, b, c, d, e);
+    }
 }

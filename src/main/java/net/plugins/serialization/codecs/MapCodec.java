@@ -60,7 +60,7 @@ public abstract class MapCodec<R> implements MapEncoder<R>, MapDecoder<R> {
     }
 
     public <O> RecordCodecBuilder<O, R> forGetter(Function<O, R> getter) {
-        return RecordCodecBuilder.of(this, getter);
+        return RecordCodecBuilder.of(getter, this);
     }
 
     public MapCodec<R> orElse(R defaultValue) {

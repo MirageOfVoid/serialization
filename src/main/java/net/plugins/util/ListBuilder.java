@@ -45,8 +45,7 @@ public interface ListBuilder<T> {
 
         @Override
         public ListBuilder<T> add(DataResult<T> element) {
-            if (element.isSuccess())
-                return add(element.getOrThrow());
+            builder = builder.merge2(this::append, element);
             return add(ops.empty());
         }
 

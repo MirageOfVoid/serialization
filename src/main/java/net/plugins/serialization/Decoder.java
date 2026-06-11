@@ -42,4 +42,13 @@ public interface Decoder<R> {
             }
         };
     }
+
+    static <R> MapDecoder<R> unit(R instance) {
+        return new MapDecoder<R>() {
+            @Override
+            public <T> DataResult<R> decode(DynamicOps<T> ops, MapLike<T> input) {
+                return DataResult.success(instance);
+            }
+        };
+    }
 }
