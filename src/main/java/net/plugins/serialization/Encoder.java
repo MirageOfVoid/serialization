@@ -32,4 +32,13 @@ public interface Encoder<R> {
     default MapEncoder<R> fieldOf(String name) {
         return new FieldEncoder<>(this, name);
     }
+
+    static <R> MapEncoder<R> empty() {
+        return new MapEncoder<R>() {
+            @Override
+            public <T> RecordBuilder<T> encode(DynamicOps<T> ops, R input, RecordBuilder<T> prefix) {
+                return prefix;
+            }
+        };
+    }
 }

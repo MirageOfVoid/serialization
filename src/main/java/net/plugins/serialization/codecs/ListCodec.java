@@ -45,11 +45,9 @@ public class ListCodec<E> implements Codec<List<E>> {
 
         public void add(T element) {
             DataResult<Pair<E, T>> elementResult = codec.decode(ops, element);
-            elementResult.ifError(error -> {
-                fails.add(element);
-                result = error.cast();
-            });
+            elementResult.ifError(error -> fails.add(element));
             elementResult.ifSuccess(pair -> elements.add(pair.getFirst()));
+            result = result.merge2((res, e) -> res, elementResult);
         }
 
         public DataResult<Pair<List<E>, T>> build() {

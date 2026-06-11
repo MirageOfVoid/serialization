@@ -1,5 +1,9 @@
 package net.plugins.util.function;
 
-public interface Function7<T1, T2, T3, T4, T5, T6, T7, R> {
-    R apply(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7);
+public interface Function7<A, B, C, D, E, F, G, R> {
+    R apply(A a, B b, C c, D d, E e, F f, G g);
+
+    default Function3<A, B, C, Function4<D, E, F, G, R>> curry() {
+        return (a, b, c) -> (d, e, f, g) -> apply(a, b, c, d, e, f, g);
+    }
 }

@@ -8,10 +8,11 @@ public class PairCodec<F, S> {
     private final Codec<S> second;
 
     public Codec<Pair<F, S>> build() {
-        return RecordCodecBuilder.codec(inst -> inst.group(
-                first.fieldOf("first").forGetter(Pair::getFirst),
-                second.fieldOf("second").forGetter(Pair::getSecond)
-        ).apply(Pair::of));
+//        return RecordCodecBuilder.codec(inst -> inst.group(
+//                first.fieldOf("first").forGetter(Pair::getFirst),
+//                second.fieldOf("second").forGetter(Pair::getSecond)
+//        ).apply(Pair::of));
+        return null;
     }
 
     public PairCodec(Codec<F> first, Codec<S> second) {
