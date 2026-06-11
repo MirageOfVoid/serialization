@@ -1,8 +1,5 @@
-package net.plugins.serialization.building;
+package net.plugins.kinds;
 
-import net.plugins.kinds.App;
-import net.plugins.kinds.Applicative;
-import net.plugins.kinds.K1;
 import net.plugins.util.function.*;
 
 import java.util.function.BiFunction;

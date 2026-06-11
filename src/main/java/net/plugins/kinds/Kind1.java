@@ -1,7 +1,5 @@
 package net.plugins.kinds;
 
-import net.plugins.serialization.building.Products;
-
 public interface Kind1<F extends K1, Mu extends  Kind1.Mu> extends App<Mu, F> {
     interface Mu extends K1 {}
 

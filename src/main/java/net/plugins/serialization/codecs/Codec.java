@@ -9,6 +9,7 @@ import net.plugins.util.Pair;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public interface Codec<R> extends Encoder<R>, Decoder<R> {
     static <R> Codec<R> of(Encoder<R> encoder, Decoder<R> decoder, String name) {
@@ -35,7 +36,11 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
     }
 
     static <F, S> Codec<Pair<F, S>> pair(Codec<F> firstCodec, Codec<S> secondCodec) {
-        return new PairCodec<>(firstCodec, secondCodec).build();
+        return new PairCodec<>(firstCodec, secondCodec);
+    }
+
+    static <E extends Enum<E>> Codec<E> enumCodec(Supplier<E[]> values) {
+        return new EnumCodec<>(values);
     }
 
     default Codec<List<R>> listOf() {
@@ -104,6 +109,10 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
 
     default boolean markedWith(String marker) {
         return toString().contains("[" + marker + "]");
+    }
+
+    default Codec<R> named(String name) {
+        return Codec.of(this, this, name);
     }
 
     PrimitiveCodec<Byte> BYTE = new PrimitiveCodec<Byte>() {

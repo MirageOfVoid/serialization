@@ -1,11 +1,10 @@
-package net.plugins.serialization.building;
+package net.plugins.serialization;
 
 import net.plugins.kinds.App;
 import net.plugins.kinds.Applicative;
 import net.plugins.kinds.K1;
 import net.plugins.util.function.Function3;
 import net.plugins.util.function.Function4;
-import net.plugins.serialization.*;
 import net.plugins.serialization.codecs.Codec;
 import net.plugins.serialization.codecs.MapCodec;
 import net.plugins.util.MapLike;
