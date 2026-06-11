@@ -1,7 +1,7 @@
 package net.plugins.serialization.codecs;
 
 import net.plugins.serialization.*;
-import net.plugins.serialization.building.RecordCodecBuilder;
+import net.plugins.serialization.RecordCodecBuilder;
 import net.plugins.util.MapLike;
 import net.plugins.util.RecordBuilder;
 
