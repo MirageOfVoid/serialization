@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+// todo
 public interface Codec<R> extends Encoder<R>, Decoder<R> {
     static <R> Codec<R> of(Encoder<R> encoder, Decoder<R> decoder, String name) {
         return new Codec<R>() {
