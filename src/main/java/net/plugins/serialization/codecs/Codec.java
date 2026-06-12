@@ -111,10 +111,6 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         return toString().contains("[" + marker + "]");
     }
 
-    default Codec<R> named(String name) {
-        return Codec.of(this, this, name);
-    }
-
     PrimitiveCodec<Byte> BYTE = new PrimitiveCodec<Byte>() {
         @Override
         public <T> T write(DynamicOps<T> ops, Byte input) {

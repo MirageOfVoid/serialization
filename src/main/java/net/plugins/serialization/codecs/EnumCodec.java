@@ -26,7 +26,7 @@ public class EnumCodec<E extends Enum<E>> implements Codec<E> {
 
     @Override
     public <T> DataResult<T> encode(DynamicOps<T> ops, E input, T prefix) {
-        return null;
+        return ops.mergeToPrimitive(prefix, ops.createString(input.name()));
     }
 
     public EnumCodec(Supplier<E[]> values) {
