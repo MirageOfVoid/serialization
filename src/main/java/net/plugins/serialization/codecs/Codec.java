@@ -14,7 +14,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-// todo: if error result add codec's name
 public interface Codec<R> extends Encoder<R>, Decoder<R> {
     @Override
     DataResult<JsonElement> encode(R input);
