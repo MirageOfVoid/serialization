@@ -3,11 +3,13 @@ package net.plugins.serialization;
 import com.google.gson.*;
 import net.plugins.util.ListBuilder;
 import net.plugins.util.MapLike;
+import net.plugins.util.Pair;
 import net.plugins.util.RecordBuilder;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class JsonOps implements DynamicOps<JsonElement> {
     public static final DynamicOps<JsonElement> INSTANCE = new JsonOps();
@@ -41,6 +43,20 @@ public class JsonOps implements DynamicOps<JsonElement> {
         JsonObject object = new JsonObject();
         value.entries().forEach(pair -> object.add(pair.getFirst().getAsString(), pair.getSecond()));
         return object;
+    }
+
+    @Override
+    public JsonElement createMap(Stream<Pair<JsonElement, JsonElement>> map) {
+        JsonObject object = new JsonObject();
+        map.forEach(pair -> object.add(pair.getFirst().getAsString(), pair.getSecond()));
+        return object;
+    }
+
+    @Override
+    public JsonElement createList(Stream<JsonElement> list) {
+        JsonArray array = new JsonArray();
+        list.forEach(array::add);
+        return array;
     }
 
     @Override
@@ -118,6 +134,14 @@ public class JsonOps implements DynamicOps<JsonElement> {
     }
 
     @Override
+    public DataResult<Stream<Pair<JsonElement, JsonElement>>> getMapValues(JsonElement element) {
+        if (element.isJsonObject())
+            return DataResult.success(element.getAsJsonObject().entrySet().stream().map(entry -> Pair.of(new JsonPrimitive(entry.getKey()), entry.getValue().isJsonNull() ? null : entry.getValue())));
+
+        return DataResult.error("Not a json object: " + element);
+    }
+
+    @Override
     public DataResult<JsonElement> getFromMap(JsonElement map, String key) {
         DataResult<MapLike<JsonElement>> mapRes = getMap(map);
         if (mapRes.isError())
@@ -155,6 +179,25 @@ public class JsonOps implements DynamicOps<JsonElement> {
     @Override
     public JsonElement emptyList() {
         return new JsonArray();
+    }
+
+    @Override
+    public <U> U convert(DynamicOps<U> ops, JsonElement element) {
+        if (element.isJsonObject())
+            return convertMap(ops, element);
+        if (element.isJsonArray())
+            return convertList(ops, element);
+        if (element.isJsonNull())
+            return ops.empty();
+
+        JsonPrimitive primitive = element.getAsJsonPrimitive();
+
+        if (primitive.isString())
+            return ops.createString(primitive.getAsString());
+        if (primitive.isBoolean())
+            return ops.createBool(primitive.getAsBoolean());
+
+        return ops.createNumber(primitive.getAsNumber());
     }
 
     @Override

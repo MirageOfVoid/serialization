@@ -2,10 +2,12 @@ package net.plugins.serialization;
 
 import net.plugins.util.ListBuilder;
 import net.plugins.util.MapLike;
+import net.plugins.util.Pair;
 import net.plugins.util.RecordBuilder;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public interface DynamicOps<T> {
     T createNumber(Number value);
@@ -41,6 +43,10 @@ public interface DynamicOps<T> {
     T createList(List<T> value);
 
     T createMap(MapLike<T> value);
+
+    T createMap(Stream<Pair<T, T>> map);
+
+    T createList(Stream<T> list);
 
     DataResult<T> mergeToList(T list, List<T> value);
 
@@ -78,13 +84,21 @@ public interface DynamicOps<T> {
 
     DataResult<List<T>> getList(T t);
 
+    default DataResult<Stream<T>> getStream(T t) {
+        return getList(t).map(List::stream);
+    }
+
     DataResult<MapLike<T>> getMap(T t);
+
+    DataResult<Stream<Pair<T, T>>> getMapValues(T t);
 
     DataResult<T> getFromMap(T map, String key);
 
     DataResult<T> getFromList(T list, int index);
 
     default DataResult<T> mergeToPrimitive(T prefix, T value) {
+        if (isEmpty(prefix))
+            return DataResult.error(() -> "Could not merge " + value + " to " + prefix, value);
         return DataResult.success(value);
     }
 
@@ -93,6 +107,8 @@ public interface DynamicOps<T> {
     T emptyMap();
 
     T emptyList();
+
+    <U> U convert(DynamicOps<U> ops, T t);
 
     T clone(T t);
 
@@ -107,4 +123,14 @@ public interface DynamicOps<T> {
     ListBuilder<T> listBuilder();
 
     RecordBuilder<T> mapBuilder();
+
+    default <U> U convertMap(DynamicOps<U> ops, T map) {
+        return ops.createMap(getMapValues(map).result().orElse(Stream.empty()).map(pair ->
+                Pair.of(convert(ops, pair.getFirst()), convert(ops, pair.getSecond()))
+        ));
+    }
+
+    default <U> U convertList(DynamicOps<U> ops, T list) {
+        return ops.createList(getStream(list).result().orElse(Stream.empty()).map(e -> convert(ops, e)));
+    }
 }

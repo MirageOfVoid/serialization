@@ -1,15 +1,13 @@
 package net.plugins.serialization.codecs;
 
-import net.plugins.serialization.DataResult;
-import net.plugins.serialization.Decoder;
-import net.plugins.serialization.DynamicOps;
-import net.plugins.serialization.Encoder;
+import net.plugins.serialization.*;
 import net.plugins.util.Pair;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public interface Codec<R> extends Encoder<R>, Decoder<R> {
     static <R> Codec<R> of(Encoder<R> encoder, Decoder<R> decoder, String name) {
@@ -244,6 +242,36 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         @Override
         public String toString() {
             return "Boolean";
+        }
+    };
+
+    Codec<Unit<?>> UNIT = new Codec<Unit<?>>() {
+        @Override
+        public <T> DataResult<Pair<Unit<?>, T>> decode(DynamicOps<T> ops, T input) {
+            return DataResult.success(Pair.of(new Unit<>(ops, input), ops.empty()));
+        }
+
+        @Override
+        public <T> DataResult<T> encode(DynamicOps<T> ops, Unit<?> input, T prefix) {
+            if (input.getValue() == input.getOps().empty())
+                return DataResult.success(prefix);
+
+            T casted = input.convert(ops).getValue();
+            if (prefix == ops.empty())
+                return DataResult.success(casted);
+
+            DataResult<T> toMap = ops.getMap(casted).flatMap(map -> ops.mergeToMap(prefix, map));
+            return toMap.result().map(DataResult::success).orElseGet(() -> {
+                DataResult<T> toList = ops.getStream(casted).flatMap(stream -> ops.mergeToList(prefix, stream.collect(Collectors.toList())));
+                return toList.result().map(DataResult::success).orElseGet(() ->
+                        DataResult.error(() -> "Can not merge " + prefix + " and " + casted, prefix)
+                );
+            });
+        }
+
+        @Override
+        public String toString() {
+            return "Unit";
         }
     };
 }
