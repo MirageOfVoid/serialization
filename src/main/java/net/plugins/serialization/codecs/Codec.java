@@ -4,6 +4,7 @@ import net.plugins.serialization.*;
 import net.plugins.util.Pair;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -33,12 +34,16 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         return of(encoder, decoder, "Codec");
     }
 
-    static <F, S> Codec<Pair<F, S>> pair(Codec<F> firstCodec, Codec<S> secondCodec) {
+    static <F, S> Codec<Pair<F, S>> pairCodec(Codec<F> firstCodec, Codec<S> secondCodec) {
         return new PairCodec<>(firstCodec, secondCodec);
     }
 
     static <E extends Enum<E>> Codec<E> enumCodec(Supplier<E[]> values) {
         return new EnumCodec<>(values);
+    }
+
+    static <K, V> Codec<Map<K, V>> entryListCodec(Codec<K> keyCodec, Codec<V> valueCodec) {
+        return new EntryListCodec<>(keyCodec, valueCodec);
     }
 
     default Codec<List<R>> listOf() {

@@ -4,6 +4,7 @@ import net.plugins.kinds.App;
 import net.plugins.kinds.Applicative;
 import net.plugins.kinds.K1;
 import net.plugins.util.function.Function3;
+import net.plugins.util.function.Function4;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -82,8 +83,12 @@ public sealed interface DataResult<R> extends App<DataResult.Mu, R> permits Data
 
     <R2> DataResult<R2> ap(DataResult<Function<R, R2>> functionResult);
 
-    default <R2, S> DataResult<S> apply(BiFunction<R, R2, S> function, DataResult<R2> second) {
+    default <R2, S> DataResult<S> apply2(BiFunction<R, R2, S> function, DataResult<R2> second) {
         return unbox(instance().apply2(function, this, second));
+    }
+
+    default <R2, R3, S> DataResult<S> apply3(Function3<R, R2, R3, S> function, DataResult<R2> second, DataResult<R3> third) {
+        return unbox(instance().apply3(function, this, second, third));
     }
 
     record Success<R>(R value) implements DataResult<R> {
@@ -336,7 +341,6 @@ public sealed interface DataResult<R> extends App<DataResult.Mu, R> permits Data
             final DataResult<A> ra = unbox(a);
             final DataResult<B> rb = unbox(b);
 
-            // for less recursion
             if (fr.result().isPresent()
                     && ra.result().isPresent()
                     && rb.result().isPresent()
@@ -357,7 +361,6 @@ public sealed interface DataResult<R> extends App<DataResult.Mu, R> permits Data
             final DataResult<T2> dr2 = unbox(t2);
             final DataResult<T3> dr3 = unbox(t3);
 
-            // for less recursion
             if (fr.result().isPresent()
                     && dr1.result().isPresent()
                     && dr2.result().isPresent()
@@ -371,6 +374,31 @@ public sealed interface DataResult<R> extends App<DataResult.Mu, R> permits Data
             }
 
             return Applicative.super.ap3(func, t1, t2, t3);
+        }
+
+        @Override
+        public <A, B, C, D, R> App<DataResult.Mu, R> ap4(App<DataResult.Mu, Function4<A, B, C, D, R>> func, App<DataResult.Mu, A> a, App<DataResult.Mu, B> b, App<DataResult.Mu, C> c, App<DataResult.Mu, D> d) {
+            final DataResult<Function4<A, B, C, D, R>> fr = unbox(func);
+            final DataResult<A> da = unbox(a);
+            final DataResult<B> db = unbox(b);
+            final DataResult<C> dc = unbox(c);
+            final DataResult<D> dd = unbox(d);
+
+            if (fr.result().isPresent()
+                    && da.result().isPresent()
+                    && db.result().isPresent()
+                    && dc.result().isPresent()
+                    && dd.result().isPresent()
+            ) {
+                return new Success<>(fr.result().get().apply(
+                        da.result().get(),
+                        db.result().get(),
+                        dc.result().get(),
+                        dd.result().get()
+                ));
+            }
+
+            return Applicative.super.ap4(func, da, db, dc, dd);
         }
 
         public static final class Mu implements Applicative.Mu {}

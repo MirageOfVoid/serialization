@@ -15,7 +15,7 @@ public class ListCodec<E> implements Codec<List<E>> {
     public <T> DataResult<Pair<List<E>, T>> decode(DynamicOps<T> ops, T input) {
         return ops.getList(input).flatMap(list -> {
             State<T> state = new State<>(ops);
-            list.forEach(state::add);
+            list.forEach(state::apply);
             return state.build();
         });
     }
@@ -34,23 +34,23 @@ public class ListCodec<E> implements Codec<List<E>> {
     }
 
     private class State<T> {
-        private final DynamicOps<T> ops;
-        private final List<E> elements = new ArrayList<>();
-        private final List<T> fails = new ArrayList<>();
+        final DynamicOps<T> ops;
+        final List<E> elements = new ArrayList<>();
+        final List<T> fails = new ArrayList<>();
         DataResult<Object> result = DataResult.success(new Object());
 
         private State(DynamicOps<T> ops) {
             this.ops = ops;
         }
 
-        public void add(T element) {
+        void apply(T element) {
             DataResult<Pair<E, T>> elementResult = codec.decode(ops, element);
             elementResult.ifError(error -> fails.add(element));
             elementResult.ifSuccess(pair -> elements.add(pair.getFirst()));
-            result = result.apply((res, e) -> res, elementResult);
+            result = result.apply2((res, e) -> res, elementResult);
         }
 
-        public DataResult<Pair<List<E>, T>> build() {
+        DataResult<Pair<List<E>, T>> build() {
             T errors = ops.createList(fails);
             Pair<List<E>, T> pair = Pair.of(List.copyOf(elements), errors);
             return result.map(o -> pair).setPartial(pair);

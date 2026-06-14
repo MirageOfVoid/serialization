@@ -9,6 +9,7 @@ import net.plugins.serialization.codecs.Codec;
 import net.plugins.serialization.codecs.MapCodec;
 import net.plugins.util.MapLike;
 import net.plugins.util.RecordBuilder;
+import net.plugins.util.function.Function5;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -262,6 +263,59 @@ public class RecordCodecBuilder<O, F> implements App<RecordCodecBuilder.Mu<O>, F
             );
         }
 
-        private static final class Mu<O> implements Applicative.Mu {}
+        @Override
+        public <A, B, C, D, E, R> App<RecordCodecBuilder.Mu<O>, R> ap5(App<RecordCodecBuilder.Mu<O>, Function5<A, B, C, D, E, R>> func, App<RecordCodecBuilder.Mu<O>, A> a, App<RecordCodecBuilder.Mu<O>, B> b, App<RecordCodecBuilder.Mu<O>, C> c, App<RecordCodecBuilder.Mu<O>, D> d, App<RecordCodecBuilder.Mu<O>, E> e) {
+            RecordCodecBuilder<O, Function5<A, B, C, D, E, R>> function = unbox(func);
+            RecordCodecBuilder<O, A> fa = unbox(a);
+            RecordCodecBuilder<O, B> fb = unbox(b);
+            RecordCodecBuilder<O, C> fc = unbox(c);
+            RecordCodecBuilder<O, D> fd = unbox(d);
+            RecordCodecBuilder<O, E> fe = unbox(e);
+
+            return new RecordCodecBuilder<>(
+                    o -> function.getter.apply(o).apply(fa.getter.apply(o), fb.getter.apply(o), fc.getter.apply(o), fd.getter.apply(o), fe.getter.apply(o)),
+                    o -> {
+                        MapEncoder<Function5<A, B, C, D, E, R>> fEncoder = function.encoder.apply(o);
+                        MapEncoder<A> aEncoder = fa.encoder.apply(o);
+                        A aFromO = fa.getter.apply(o);
+                        MapEncoder<B> bEncoder = fb.encoder.apply(o);
+                        B bFromO = fb.getter.apply(o);
+                        MapEncoder<C> cEncoder = fc.encoder.apply(o);
+                        C cFromO = fc.getter.apply(o);
+                        MapEncoder<D> dEncoder = fd.encoder.apply(o);
+                        D dFromO = fd.getter.apply(o);
+                        MapEncoder<E> eEncoder = fe.encoder.apply(o);
+                        E eFromO = fe.getter.apply(o);
+
+                        return new MapEncoder<R>() {
+                            @Override
+                            public <T> RecordBuilder<T> encode(DynamicOps<T> ops, R input, RecordBuilder<T> prefix) {
+                                aEncoder.encode(ops, aFromO, prefix);
+                                bEncoder.encode(ops, bFromO, prefix);
+                                cEncoder.encode(ops, cFromO, prefix);
+                                dEncoder.encode(ops, dFromO, prefix);
+                                eEncoder.encode(ops, eFromO, prefix);
+                                fEncoder.encode(ops, (a1, a2, a3, a4, a5) -> input, prefix);
+                                return prefix;
+                            }
+                        };
+                    },
+                    new MapDecoder<R>() {
+                        @Override
+                        public <T> DataResult<R> decode(DynamicOps<T> ops, MapLike<T> input) {
+                            return DataResult.unbox(DataResult.instance().ap5(
+                                    function.decoder.decode(ops, input),
+                                    fa.decoder.decode(ops, input),
+                                    fb.decoder.decode(ops, input),
+                                    fc.decoder.decode(ops, input),
+                                    fd.decoder.decode(ops, input),
+                                    fe.decoder.decode(ops, input)
+                            ));
+                        }
+                    }
+            );
+        }
+
+        public static final class Mu<O> implements Applicative.Mu {}
     }
 }

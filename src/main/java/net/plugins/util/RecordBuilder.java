@@ -10,6 +10,8 @@ public interface RecordBuilder<T> {
 
     RecordBuilder<T> add(T key, DataResult<T> value);
 
+    RecordBuilder<T> add(DataResult<T> key, DataResult<T> value);
+
     RecordBuilder<T> withErrorsFrom(DataResult<?> result);
 
     DataResult<T> build(T prefix);
@@ -69,7 +71,16 @@ public interface RecordBuilder<T> {
 
         @Override
         public RecordBuilder<T> add(String key, DataResult<T> value) {
-            builder = builder.apply((b, v) -> append(key, v, b), value);
+            builder = builder.apply2((b, v) -> append(key, v, b), value);
+            return this;
+        }
+
+        @Override
+        public RecordBuilder<T> add(DataResult<T> key, DataResult<T> value) {
+            builder = key.flatMap(t -> {
+                add(t, value);
+                return builder;
+            });
             return this;
         }
 

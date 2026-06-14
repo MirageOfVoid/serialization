@@ -45,7 +45,7 @@ public interface ListBuilder<T> {
 
         @Override
         public ListBuilder<T> add(DataResult<T> element) {
-            builder = builder.apply(this::append, element);
+            builder = builder.apply2(this::append, element);
             return this;
         }
 

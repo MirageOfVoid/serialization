@@ -150,7 +150,7 @@ public class JsonOps implements DynamicOps<JsonElement> {
         JsonElement result = mapRes.getOrThrow().get(key);
         if (result == null)
             return DataResult.error("No field " + key + " in " + map);
-        return DataResult.success(mapRes.getOrThrow().get(key));
+        return DataResult.success(result);
     }
 
     @Override
@@ -263,7 +263,7 @@ public class JsonOps implements DynamicOps<JsonElement> {
                     result.add(entry.getKey(), entry.getValue());
                 return DataResult.success(result);
             }
-            return DataResult.error("Not a json object: " + prefix);
+            return DataResult.error(() -> "Not a json object: " + prefix, builder);
         }
     }
 

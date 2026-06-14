@@ -53,6 +53,14 @@ public interface Applicative<F extends K1, Mu extends Applicative.Mu> extends Fu
         return ap4(ap4(map(Function8::curry, func), a, b, c, d), e, f, g, h);
     }
 
+    default <A, B, C, D, E, F1, G, H, I, R> App<F, R> ap9(App<F, Function9<A, B, C, D, E, F1, G, H, I, R>> func, App<F, A> a, App<F, B> b, App<F, C> c, App<F, D> d, App<F, E> e, App<F, F1> f, App<F, G> g, App<F, H> h, App<F, I> i) {
+        return ap5(ap4(map(Function9::curry, func), a, b, c, d), e, f, g, h, i);
+    }
+
+    default <A, B, C, D, E, F1, G, H, I, J, R> App<F, R> ap10(App<F, Function10<A, B, C, D, E, F1, G, H, I, J, R>> func, App<F, A> a, App<F, B> b, App<F, C> c, App<F, D> d, App<F, E> e, App<F, F1> f, App<F, G> g, App<F, H> h, App<F, I> i, App<F, J> j) {
+        return ap5(ap5(map(Function10::curry, func), a, b, c, d, e), f, g, h, i, j);
+    }
+
     default <A, B, R> App<F, R> apply2(BiFunction<A, B, R> function, App<F, A> a, App<F, B> b) {
         return ap2(point(function), a, b);
     }
