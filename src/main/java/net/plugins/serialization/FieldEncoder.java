@@ -15,9 +15,4 @@ public class FieldEncoder<R> implements MapEncoder<R> {
         this.encoder = encoder;
         this.name = name;
     }
-
-    @Override
-    public String toString() {
-        return name;
-    }
 }

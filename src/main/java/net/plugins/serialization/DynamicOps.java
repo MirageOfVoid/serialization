@@ -110,8 +110,6 @@ public interface DynamicOps<T> {
 
     <U> U convert(DynamicOps<U> ops, T t);
 
-    T clone(T t);
-
     boolean isMap(T t);
 
     boolean isList(T t);

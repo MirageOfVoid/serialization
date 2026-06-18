@@ -1,16 +1,14 @@
 package net.plugins.serialization.codecs;
 
 import com.google.gson.JsonElement;
-import net.plugins.serialization.DataResult;
-import net.plugins.serialization.DynamicOps;
-import net.plugins.serialization.JsonOps;
-import net.plugins.serialization.Unit;
+import net.plugins.serialization.*;
 
 import java.util.List;
 import java.util.function.Function;
 
 public class Codecs {
     public static final Codec<JsonElement> JSON_ELEMENT = fromOps(JsonOps.INSTANCE);
+    public static final Codec<Object> BASE_OBJECT = fromOps(JavaOps.INSTANCE);
 
     public static <T> Codec<T> fromOps(DynamicOps<T> ops) {
         return Codec.UNIT.xmap(unit -> unit.convert(ops).getValue(), t -> new Unit<>(ops, t));

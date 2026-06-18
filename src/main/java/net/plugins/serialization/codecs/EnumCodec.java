@@ -15,13 +15,12 @@ public class EnumCodec<E extends Enum<E>> implements Codec<E> {
     @Override
     public <T> DataResult<Pair<E, T>> decode(DynamicOps<T> ops, T input) {
         DataResult<String> in = ops.getString(input);
-        if (in.isError())
-            return in.error().get().cast();
-        String name = in.getOrThrow();
-        E e = map.get(name);
-        if (e == null)
-            return DataResult.error("Could not find enum element " + name);
-        return DataResult.success(Pair.of(e, ops.empty()));
+        return in.flatMap(name -> {
+            E e = map.get(name);
+            if (e == null)
+                return DataResult.error("Could not find enum element " + name);
+            return DataResult.success(Pair.of(e, ops.empty()));
+        });
     }
 
     @Override

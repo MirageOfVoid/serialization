@@ -302,10 +302,6 @@ public sealed interface DataResult<R> extends App<DataResult.Mu, R> permits Data
             return DataResult.success(value.get());
         }
 
-        public <T> DataResult<T> cast() {
-            return DataResult.error(messageSupplier);
-        }
-
         @Override
         public @NotNull String toString() {
             return "{DataResult.Error[" + getMessage() + partialValue.map(r -> ": " + r + "]").orElse("]}");

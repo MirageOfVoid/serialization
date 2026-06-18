@@ -13,24 +13,12 @@ public class FieldDecoder<R> implements MapDecoder<R> {
             DataResult<R> result1 = decoder.parse(ops, ops.empty());
             if (result1.isSuccess())
                 return result1;
-            return DataResult.error("No field " + name + " in " + input);
+            return result1.flatMap(r -> DataResult.error(() -> "No field " + name + " in " + input, r));
         }
         return decoder.parse(ops, t);
     }
     public FieldDecoder(Decoder<R> decoder, String name) {
         this.decoder = decoder;
         this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return "FieldOf(" + name + ")-FROM";
-    }
-
-    public static String getFieldName(MapDecoder<?> mapDecoder) {
-        String s = mapDecoder.toString();
-        @SuppressWarnings("all")
-        String s1 = s.substring(8).replaceAll(")-FROM".toString(), "");
-        return s1;
     }
 }

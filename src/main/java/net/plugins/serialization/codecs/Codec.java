@@ -42,12 +42,16 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         return new EnumCodec<>(values);
     }
 
-    static <K, V> Codec<Map<K, V>> entryListCodec(Codec<K> keyCodec, Codec<V> valueCodec) {
-        return new EntryListCodec<>(keyCodec, valueCodec);
+    static <K, V> Codec<Map<K, V>> basedMapCodec(Codec<K> keyCodec, Codec<V> valueCodec) {
+        return new BasedListCodec<>(keyCodec, valueCodec);
     }
 
     default Codec<List<R>> listOf() {
         return new ListCodec<>(this);
+    }
+
+    default Codec<R[]> arrayOf(Class<R> elementType) {
+        return new ArrayCodec<>(elementType, this);
     }
 
     default Codec<Optional<R>> optionalOf() {

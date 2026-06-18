@@ -144,26 +144,24 @@ public class JsonOps implements DynamicOps<JsonElement> {
     @Override
     public DataResult<JsonElement> getFromMap(JsonElement map, String key) {
         DataResult<MapLike<JsonElement>> mapRes = getMap(map);
-        if (mapRes.isError())
-            return mapRes.error().get().cast();
+        return mapRes.flatMap(mapLike -> {
 
-        JsonElement result = mapRes.getOrThrow().get(key);
-        if (result == null)
-            return DataResult.error("No field " + key + " in " + map);
-        return DataResult.success(result);
+            JsonElement result = mapLike.get(key);
+            if (result == null || result.isJsonNull())
+                return DataResult.error("No field " + key + " in " + map);
+            return DataResult.success(result);
+        });
     }
 
     @Override
     public DataResult<JsonElement> getFromList(JsonElement list, int index) {
         DataResult<List<JsonElement>> listRes = getList(list);
-        if (listRes.isError())
-            return listRes.error().get().cast();
+        return listRes.flatMap(lst -> {
+            if (index >= lst.size())
+                return DataResult.error("Index " + index + " out of bounds for length " + lst.size());
 
-        List<JsonElement> list1 = listRes.getOrThrow();
-        if (index >= list1.size())
-            return DataResult.error("Index " + index + " out of bounds for length " + list1.size());
-
-        return DataResult.success(list1.get(index));
+            return DataResult.success(lst.get(index));
+        });
     }
 
     @Override
@@ -198,11 +196,6 @@ public class JsonOps implements DynamicOps<JsonElement> {
             return ops.createBool(primitive.getAsBoolean());
 
         return ops.createNumber(primitive.getAsNumber());
-    }
-
-    @Override
-    public JsonElement clone(JsonElement element) {
-        return element.deepCopy();
     }
 
     @Override

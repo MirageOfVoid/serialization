@@ -1,6 +1,5 @@
 package net.plugins.serialization;
 
-import net.plugins.util.MapLike;
 import net.plugins.util.Pair;
 
 public class CompressedMapDecoder<R> implements Decoder<R> {
@@ -8,10 +7,7 @@ public class CompressedMapDecoder<R> implements Decoder<R> {
 
     @Override
     public <T> DataResult<Pair<R, T>> decode(DynamicOps<T> ops, T input) {
-        if (!ops.isMap(input))
-            return DataResult.error("Not a map input: " + input);
-        MapLike<T> mapLike = ops.getMap(input).getOrThrow();
-        return decoder.decode(ops, mapLike).map(r -> Pair.of(r, input));
+        return ops.getMap(input).flatMap(mapLike -> decoder.decode(ops, mapLike).map(r -> Pair.of(r, ops.empty())));
     }
 
     public CompressedMapDecoder(MapDecoder<R> mapDecoder) {
