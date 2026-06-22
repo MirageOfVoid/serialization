@@ -97,8 +97,8 @@ public interface DynamicOps<T> {
     DataResult<T> getFromList(T list, int index);
 
     default DataResult<T> mergeToPrimitive(T prefix, T value) {
-        if (isEmpty(prefix))
-            return DataResult.error(() -> "Could not merge " + value + " to " + prefix, value);
+        if (!Objects.equals(prefix, empty()))
+            return DataResult.error(() -> "Do not know how to append " + value + " to " + prefix, value);
         return DataResult.success(value);
     }
 

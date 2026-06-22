@@ -9,7 +9,7 @@ import net.plugins.util.RecordBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BasedListCodec<K, V> implements Codec<Map<K, V>> {
+public class BasedMapCodec<K, V> implements Codec<Map<K, V>> {
     private final Codec<K> keyCodec;
     private final Codec<V> valueCodec;
 
@@ -59,7 +59,7 @@ public class BasedListCodec<K, V> implements Codec<Map<K, V>> {
         }
     }
 
-    public BasedListCodec(Codec<K> keyCodec, Codec<V> valueCodec) {
+    public BasedMapCodec(Codec<K> keyCodec, Codec<V> valueCodec) {
         this.keyCodec = keyCodec;
         this.valueCodec = valueCodec;
     }

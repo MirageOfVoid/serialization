@@ -43,7 +43,7 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
     }
 
     static <K, V> Codec<Map<K, V>> basedMapCodec(Codec<K> keyCodec, Codec<V> valueCodec) {
-        return new BasedListCodec<>(keyCodec, valueCodec);
+        return new BasedMapCodec<>(keyCodec, valueCodec);
     }
 
     default Codec<List<R>> listOf() {
@@ -254,7 +254,7 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
         }
     };
 
-    Codec<Unit<?>> UNIT = new Codec<Unit<?>>() {
+    Codec<Unit<?>> PASSTHROUGH = new Codec<Unit<?>>() {
         @Override
         public <T> DataResult<Pair<Unit<?>, T>> decode(DynamicOps<T> ops, T input) {
             return DataResult.success(Pair.of(new Unit<>(ops, input), ops.empty()));

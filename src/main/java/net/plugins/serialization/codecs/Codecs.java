@@ -11,7 +11,7 @@ public class Codecs {
     public static final Codec<Object> BASE_OBJECT = fromOps(JavaOps.INSTANCE);
 
     public static <T> Codec<T> fromOps(DynamicOps<T> ops) {
-        return Codec.UNIT.xmap(unit -> unit.convert(ops).getValue(), t -> new Unit<>(ops, t));
+        return Codec.PASSTHROUGH.xmap(unit -> unit.convert(ops).getValue(), t -> new Unit<>(ops, t));
     }
 
     private static Codec<Integer> rangedInt(int min, int max, Function<Integer, String> errorMessageFactory) {
