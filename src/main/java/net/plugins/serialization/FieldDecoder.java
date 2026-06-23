@@ -10,10 +10,7 @@ public class FieldDecoder<R> implements MapDecoder<R> {
     public <T> DataResult<R> decode(DynamicOps<T> ops, MapLike<T> input) {
         T t = input.get(name);
         if (t == null) {
-            DataResult<R> result1 = decoder.parse(ops, ops.empty());
-            if (result1.isSuccess())
-                return result1;
-            return result1.flatMap(r -> DataResult.error(() -> "No field " + name + " in " + input, r));
+            return DataResult.error(() -> "No field \"" + name + "\" in " + input);
         }
         return decoder.parse(ops, t);
     }

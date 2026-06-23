@@ -48,7 +48,7 @@ public class RecordCodecBuilder<O, F> implements App<RecordCodecBuilder.Mu<O>, F
     }
 
     public static <O> MapCodec<O> mapCodec(Function<Instance<O>, ? extends App<Mu<O>, O>> builder) {
-        return build(builder.apply(instance()), "MapCodec");
+        return build(builder.apply(instance()), "RecordMapCodec");
     }
 
     public static <O> Codec<O> codec(Function<Instance<O>, ? extends App<Mu<O>, O>> builder, String name) {
@@ -56,7 +56,7 @@ public class RecordCodecBuilder<O, F> implements App<RecordCodecBuilder.Mu<O>, F
     }
 
     public static <O> Codec<O> codec(Function<Instance<O>, ? extends App<Mu<O>, O>> builder) {
-        return build(builder.apply(instance()), "Codec").compress();
+        return build(builder.apply(instance()), "RecordCodec").compress();
     }
 
     public static <O> MapCodec<O> build(App<Mu<O>, O> builderBox, String name) {

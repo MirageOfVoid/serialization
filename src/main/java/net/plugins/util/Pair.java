@@ -1,7 +1,5 @@
 package net.plugins.util;
 
-import net.plugins.serialization.DataResult;
-
 import java.util.function.Function;
 
 public class Pair<F,  S> {

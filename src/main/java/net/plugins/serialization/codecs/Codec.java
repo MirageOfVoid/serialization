@@ -280,7 +280,7 @@ public interface Codec<R> extends Encoder<R>, Decoder<R> {
 
         @Override
         public String toString() {
-            return "Unit";
+            return "Passthrough";
         }
     };
 }

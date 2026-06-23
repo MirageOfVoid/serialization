@@ -7,6 +7,7 @@ import com.google.gson.JsonNull;
 import net.plugins.serialization.DataResult;
 import net.plugins.serialization.JsonOps;
 import net.plugins.serialization.codecs.Codec;
+import net.plugins.serialization.codecs.MapCodec;
 import net.plugins.util.Mapper;
 
 import java.util.Objects;
@@ -16,6 +17,10 @@ public class JsonFileHelper<R> extends FileHelper<R, JsonElement> {
         super(codec, JsonOps.INSTANCE,
                 new Mapper<>(element -> DataResult.success(GSON.toJson(element)),
                         str -> DataResult.success(Objects.requireNonNullElse(GSON.fromJson(str, JsonElement.class), JsonNull.INSTANCE))));
+    }
+
+    public JsonFileHelper(MapCodec<R> codec) {
+        this(codec.compress());
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

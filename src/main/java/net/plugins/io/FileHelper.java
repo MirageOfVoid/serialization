@@ -3,6 +3,7 @@ package net.plugins.io;
 import net.plugins.serialization.DataResult;
 import net.plugins.serialization.DynamicOps;
 import net.plugins.serialization.codecs.Codec;
+import net.plugins.serialization.codecs.MapCodec;
 import net.plugins.util.Pair;
 import net.plugins.util.Mapper;
 
@@ -14,14 +15,20 @@ public class FileHelper<R, T> {
     private final DynamicOps<T> ops;
     private final Mapper<T, String> mapper;
 
+    protected boolean createFile = false;
+
     public FileHelper(Codec<R> codec, DynamicOps<T> ops, Mapper<T, String> mapper) {
         this.codec = codec;
         this.ops = ops;
         this.mapper = mapper;
     }
 
-    public static <R, T> FileHelper<R, T> create(Codec<R> codec, DynamicOps<T> ops, Mapper<T, String> mapper) {
-        return new FileHelper<>(codec, ops, mapper);
+    public FileHelper(MapCodec<R> codec, DynamicOps<T> ops, Mapper<T, String> mapper) {
+        this(codec.compress(), ops, mapper);
+    }
+
+    public void enableCreatingFile() {
+        this.createFile = true;
     }
 
     protected DynamicOps<T> ops() {
@@ -33,6 +40,15 @@ public class FileHelper<R, T> {
     }
 
     public DataResult<T> serialize(R r, File file) {
+        if (!file.exists() && createFile) {
+            try {
+                file.getParentFile().mkdirs();
+                file.createNewFile();
+            } catch (IOException e) {
+                return DataResult.<T>error(e).flatMap(t -> codec.encodeStart(ops, r));
+            }
+        }
+
         return getContent(file).flatMap(content -> setContent(file, codec.encode(ops, r, content)));
     }
 
