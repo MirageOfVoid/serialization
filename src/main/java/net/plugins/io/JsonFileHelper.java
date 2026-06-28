@@ -14,9 +14,7 @@ import java.util.Objects;
 
 public class JsonFileHelper<R> extends FileHelper<R, JsonElement> {
     public JsonFileHelper(Codec<R> codec) {
-        super(codec, JsonOps.INSTANCE,
-                new Mapper<>(element -> DataResult.success(GSON.toJson(element)),
-                        str -> DataResult.success(Objects.requireNonNullElse(GSON.fromJson(str, JsonElement.class), JsonNull.INSTANCE))));
+        super(codec, JsonOps.INSTANCE, MAPPER);  
     }
 
     public JsonFileHelper(MapCodec<R> codec) {
@@ -24,4 +22,7 @@ public class JsonFileHelper<R> extends FileHelper<R, JsonElement> {
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Mapper<String, JsonElement> MAPPER = new Mapper<>(element -> DataResult.success(GSON.toJson(element)),
+                        str -> DataResult.success(Objects.requireNonNullElse(GSON.fromJson(str, JsonElement.class), JsonNull.INSTANCE))));
+
 }
